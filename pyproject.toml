@@ -7,6 +7,7 @@ authors = [{name = "Scott Hyndman", email = "scotty.hyndman@gmail.com"}]
 requires-python = ">=3.12"
 dependencies = [
     "evdev>=1.9.2",
+    "loguru>=0.7.3",
     "numpy>=2.2.5",
     "sounddevice>=0.5.1",
     "soundfile>=0.13.1",
@@ -20,7 +21,7 @@ repository = "https://github.com/shyndman/lmnop_transcribe"
 "Bug Tracker" = "https://github.com/shyndman/lmnop_transcribe/issues"
 
 [project.scripts]
-lmnop-transcribe = "lmnop_transcribe:main"
+lmnop-transcribe = "lmnop_transcribe.__main__:main"
 
 [build-system]
 requires = ["hatchling"]

@@ -1,6 +1,7 @@
 import socket
 import wave
 
+from loguru import logger
 from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.event import read_event, write_event
@@ -52,12 +53,11 @@ def transcribe_audio_with_wyoming(audio_file, wyoming_server_address):
           transcribed_text = transcript.text.strip()
           return transcribed_text
         else:
-          print(f"Unexpected event: {transcript_event}")
+          logger.warning(f"Unexpected event: {transcript_event}")
           return None
 
   except ConnectionRefusedError as e:
-    print(f"Error connecting to Wyoming ASR server: {e}")
+    logger.error(f"Error connecting to Wyoming ASR server: {e}")
     return None
   except Exception as e:
-    print(f"Error transcribing audio: {e}")
-    return None
+    logger.exception(f"Error transcribing audio: {e}")

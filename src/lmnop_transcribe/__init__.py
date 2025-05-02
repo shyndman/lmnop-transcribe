@@ -1,2 +1,5 @@
+from loguru import logger
+
+
 def main() -> None:
-  print("Hello from !")
+  logger.info("Hello from !")

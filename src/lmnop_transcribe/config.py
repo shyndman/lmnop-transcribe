@@ -1,6 +1,7 @@
 import os
 
 import toml
+from loguru import logger
 
 
 class Config:
@@ -18,10 +19,10 @@ class Config:
         raise FileNotFoundError(f"Config file not found at {config_path}")
       config = toml.load(config_path)
     except FileNotFoundError as e:
-      print(f"Error: {e}")
+      logger.error(f"Error: {e}")
       config = {}
     except toml.TomlDecodeError as e:
-      print(f"Error decoding TOML file: {e}")
+      logger.error(f"Error decoding TOML file: {e}")
       config = {}
 
     self._audio_device_name = config.get("audio_device_name", "default")
@@ -33,7 +34,7 @@ class Config:
     self._use_sox_silence = config.get("use_sox_silence", False)
     self._trim_ms = config.get("trim_ms", 50)
     self._audio_cleanup_command = config.get("audio_cleanup_command", "")
-    self._keyboard_device_name = config.get("xkeyboard_device_name", "")
+    self._keyboard_device_name = config.get("keyboard_device_name", "")
     self._start_trigger_type = config.get("trigger", {}).get("start_trigger_type", "caps_lock")
     self._start_trigger_param = config.get("trigger", {}).get("start_trigger_param", "")
     self._stop_trigger_type = config.get("trigger", {}).get("stop_trigger_type", "caps_lock")
@@ -43,6 +44,7 @@ class Config:
     self._use_desktop_notifications = config.get("use_desktop_notifications", True)
     self._whisper_model_name = config.get("whisper_model_name", "small")
     self._audio_sample_rate = config.get("audio_sample_rate", 16000)
+    self._log_level = config.get("log_level", "INFO")
 
   @property
   def audio_device_name(self) -> str:
@@ -91,7 +93,7 @@ class Config:
 
   @property
   def keyboard_device_name(self) -> str:
-    """Returns the name of the xkeyboard device to use."""
+    """Returns the name of the keyboard device to use."""
     return self._keyboard_device_name
 
   @property
@@ -138,3 +140,8 @@ class Config:
   def audio_sample_rate(self) -> int:
     """Returns the audio sample rate."""
     return self._audio_sample_rate
+
+  @property
+  def log_level(self) -> str:
+    """Returns the configured log level."""
+    return self._log_level

@@ -1,16 +1,17 @@
 import evdev
+from loguru import logger
 
 from .config import Config
 
 
 def get_keyboard_device():
   devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
-  print("Available devices:")
+  logger.info("Available devices:")
   for device in devices:
-    print(f"  - {device.path}: {device.name}")
+    logger.info(f"  - {device.path}: {device.name}")
   keyboard_device = None
 
-  print("No keyboard device name specified, attempting to use first available keyboard.")
+  logger.info("No keyboard device name specified, attempting to use first available keyboard.")
   keyboard_name = Config().keyboard_device_name
   if keyboard_device is None:
     for device in devices:
@@ -22,8 +23,8 @@ def get_keyboard_device():
         break
 
   if keyboard_device is None:
-    print("No keyboard device found.")
+    logger.error("No keyboard device found.")
     return None
 
-  print(f"Using keyboard device: {keyboard_device.name}")
+  logger.info(f"Using keyboard device: {keyboard_device.name}")
   return keyboard_device

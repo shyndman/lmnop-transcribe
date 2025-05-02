@@ -1,6 +1,8 @@
 import asyncio  # Import asyncio
 import subprocess
 
+from loguru import logger
+
 from .config import Config
 
 
@@ -12,9 +14,9 @@ async def send_notification(message):  # Make async
       # Run subprocess.run in a thread pool executor
       await loop.run_in_executor(None, lambda: subprocess.run(["notify-send", message], check=True))
     except FileNotFoundError:
-      print("notify-send is not installed. Please install it to use desktop notifications.")
+      logger.error("notify-send is not installed. Please install it to use desktop notifications.")
     except subprocess.CalledProcessError as e:
-      print(f"Error sending notification: {e}")
+      logger.error(f"Error sending notification: {e}")
 
 
 async def play_sound(filename):  # Make async
@@ -33,8 +35,8 @@ async def play_sound(filename):  # Make async
         # If pw-play not found, try paplay
         await loop.run_in_executor(None, lambda: subprocess.run(["paplay", filename], check=True))
       except FileNotFoundError:
-        print("pw-play or paplay is not installed. Please install one to use sound effects.")
+        logger.error("pw-play or paplay is not installed. Please install one to use sound effects.")
       except subprocess.CalledProcessError as e:
-        print(f"Error playing sound with paplay: {e}")
+        logger.error(f"Error playing sound with paplay: {e}")
     except subprocess.CalledProcessError as e:
-      print(f"Error playing sound with pw-play: {e}")
+      logger.error(f"Error playing sound with pw-play: {e}")
