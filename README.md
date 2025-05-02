@@ -48,7 +48,6 @@ This command uses the configuration options specified in the `config.toml` file.
 *   `channels`: The number of audio channels to record.
 *   `block_size`: The audio block size.
 *   `filename`: The name of the output audio file.
-*   `notification_sound`: The path to the notification sound file.
 *   `audio_cleanup_command`: The command to use for audio cleanup.
 *   `trim_ms`: The number of milliseconds to trim from the start and end of the audio.
 *   `use_sox_silence`: Whether to use SoX silence detection for audio cleanup.
