@@ -24,147 +24,117 @@ class Config:
       print(f"Error decoding TOML file: {e}")
       config = {}
 
-    self._audio_cleanup_command = config.get("audio_cleanup_command", "")
     self._audio_device_name = config.get("audio_device_name", "default")
-    self._block_size = config.get("block_size", 4096)
     self._channels = config.get("channels", 1)
+    self._sample_rate = config.get("sample_rate", 44100)
+    self._wyoming_server_address = config.get("wyoming_server_address", "localhost:8080")
+    self._filename = config.get("filename", "output.wav")
+    self._block_size = config.get("block_size", 4096)
+    self._use_sox_silence = config.get("use_sox_silence", False)
+    self._trim_ms = config.get("trim_ms", 50)
+    self._audio_cleanup_command = config.get("audio_cleanup_command", "")
+    self._keyboard_device_name = config.get("xkeyboard_device_name", "")
+    self._start_trigger_type = config.get("trigger", {}).get("start_trigger_type", "caps_lock")
+    self._start_trigger_param = config.get("trigger", {}).get("start_trigger_param", "")
+    self._stop_trigger_type = config.get("trigger", {}).get("stop_trigger_type", "caps_lock")
+    self._stop_trigger_param = config.get("trigger", {}).get("stop_trigger_param", "")
     self._feedback_sound_start = config.get("feedback_sound_start", "")
     self._feedback_sound_stop = config.get("feedback_sound_stop", "")
-    self._filename = config.get("filename", "output.wav")
-    self._keyboard_device_name = config.get("xkeyboard_device_name", "")
-    self._notification_sound = config.get("notification_sound", "")
-    self._sample_rate = config.get("sample_rate", 44100)
-    self._trim_ms = config.get("trim_ms", 50)
     self._use_desktop_notifications = config.get("use_desktop_notifications", True)
-    self._use_sox_silence = config.get("use_sox_silence", False)
     self._whisper_model_name = config.get("whisper_model_name", "small")
     self._audio_sample_rate = config.get("audio_sample_rate", 16000)
-    self._wyoming_server_address = config.get("wyoming_server_address", "localhost:8080")
-
-  @property
-  def audio_cleanup_command(self) -> str:
-    return self._audio_cleanup_command
-
-  @audio_cleanup_command.setter
-  def audio_cleanup_command(self, value: str):
-    self._audio_cleanup_command = value
 
   @property
   def audio_device_name(self) -> str:
+    """Returns the name of the audio device."""
     return self._audio_device_name
-
-  @audio_device_name.setter
-  def audio_device_name(self, value: str):
-    self._audio_device_name = value
-
-  @property
-  def block_size(self) -> int:
-    return self._block_size
-
-  @block_size.setter
-  def block_size(self, value: int):
-    self._block_size = value
 
   @property
   def channels(self) -> int:
+    """Returns the number of audio channels."""
     return self._channels
-
-  @channels.setter
-  def channels(self, value: int):
-    self._channels = value
-
-  @property
-  def feedback_sound_start(self) -> str:
-    return self._feedback_sound_start
-
-  @feedback_sound_start.setter
-  def feedback_sound_start(self, value: str):
-    self._feedback_sound_start = value
-
-  @property
-  def feedback_sound_stop(self) -> str:
-    return self._feedback_sound_stop
-
-  @feedback_sound_stop.setter
-  def feedback_sound_stop(self, value: str):
-    self._feedback_sound_stop = value
-
-  @property
-  def filename(self) -> str:
-    return self._filename
-
-  @filename.setter
-  def filename(self, value: str):
-    self._filename = value
-
-  @property
-  def keyboard_device_name(self) -> str:
-    return self._keyboard_device_name
-
-  @keyboard_device_name.setter
-  def keyboard_device_name(self, value: str):
-    self._keyboard_device_name = value
-
-  @property
-  def notification_sound(self) -> str:
-    return self._notification_sound
-
-  @notification_sound.setter
-  def notification_sound(self, value: str):
-    self._notification_sound = value
 
   @property
   def sample_rate(self) -> int:
+    """Returns the sample rate of the audio."""
     return self._sample_rate
-
-  @sample_rate.setter
-  def sample_rate(self, value: int):
-    self._sample_rate = value
-
-  @property
-  def trim_ms(self) -> int:
-    return self._trim_ms
-
-  @trim_ms.setter
-  def trim_ms(self, value: int):
-    self._trim_ms = value
-
-  @property
-  def use_desktop_notifications(self) -> bool:
-    return self._use_desktop_notifications
-
-  @use_desktop_notifications.setter
-  def use_desktop_notifications(self, value: bool):
-    self._use_desktop_notifications = value
-
-  @property
-  def use_sox_silence(self) -> bool:
-    return self._use_sox_silence
-
-  @use_sox_silence.setter
-  def use_sox_silence(self, value: bool):
-    self._use_sox_silence = value
-
-  @property
-  def whisper_model_name(self) -> str:
-    return self._whisper_model_name
-
-  @whisper_model_name.setter
-  def whisper_model_name(self, value: str):
-    self._whisper_model_name = value
-
-  @property
-  def audio_sample_rate(self) -> int:
-    return self._audio_sample_rate
-
-  @audio_sample_rate.setter
-  def audio_sample_rate(self, value: int):
-    self._audio_sample_rate = value
 
   @property
   def wyoming_server_address(self) -> str:
+    """Returns the address of the Wyoming STT server."""
     return self._wyoming_server_address
 
-  @wyoming_server_address.setter
-  def wyoming_server_address(self, value: str):
-    self._wyoming_server_address = value
+  @property
+  def filename(self) -> str:
+    """Returns the filename to save the recorded audio to."""
+    return self._filename
+
+  @property
+  def block_size(self) -> int:
+    """Returns the block size to use when recording audio."""
+    return self._block_size
+
+  @property
+  def use_sox_silence(self) -> bool:
+    """Returns whether to use sox to detect silence."""
+    return self._use_sox_silence
+
+  @property
+  def trim_ms(self) -> int:
+    """Returns the amount of silence to trim from the beginning and end of the recording, in milliseconds."""
+    return self._trim_ms
+
+  @property
+  def audio_cleanup_command(self) -> str:
+    """Returns the command to run to clean up the audio after recording."""
+    return self._audio_cleanup_command
+
+  @property
+  def keyboard_device_name(self) -> str:
+    """Returns the name of the xkeyboard device to use."""
+    return self._keyboard_device_name
+
+  @property
+  def start_trigger_type(self) -> str:
+    """Returns the type of trigger to start recording."""
+    return self._start_trigger_type
+
+  @property
+  def start_trigger_param(self) -> str:
+    """Returns the parameter for the start recording trigger (e.g., key code)."""
+    return self._start_trigger_param
+
+  @property
+  def stop_trigger_type(self) -> str:
+    """Returns the type of trigger to stop recording."""
+    return self._stop_trigger_type
+
+  @property
+  def stop_trigger_param(self) -> str:
+    """Returns the parameter for the stop recording trigger (e.g., key code)."""
+    return self._stop_trigger_param
+
+  @property
+  def feedback_sound_start(self) -> str:
+    """Returns the path to the sound to play when recording starts."""
+    return self._feedback_sound_start
+
+  @property
+  def feedback_sound_stop(self) -> str:
+    """Returns the path to the sound to play when recording stops."""
+    return self._feedback_sound_stop
+
+  @property
+  def use_desktop_notifications(self) -> bool:
+    """Returns whether to use desktop notifications to alert the user when transcription is complete."""
+    return self._use_desktop_notifications
+
+  @property
+  def whisper_model_name(self) -> str:
+    """Returns the name of the whisper model to use."""
+    return self._whisper_model_name
+
+  @property
+  def audio_sample_rate(self) -> int:
+    """Returns the audio sample rate."""
+    return self._audio_sample_rate

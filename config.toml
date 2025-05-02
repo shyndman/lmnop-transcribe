@@ -27,3 +27,13 @@ feedback_sound_start = "assets/start.mp3"
 feedback_sound_stop = "assets/stop.mp3"
 # Whether to use desktop notifications to alert the user when transcription is complete.
 use_desktop_notifications = true
+
+[trigger]
+# The type of trigger to start recording (e.g., "caps_lock").
+start_trigger_type = "caps_lock"
+# Parameter for the start trigger (e.g., key code for a specific key).
+start_trigger_param = ""
+# The type of trigger to stop recording (e.g., "caps_lock").
+stop_trigger_type = "caps_lock"
+# Parameter for the stop trigger (e.g., key code for a specific key).
+stop_trigger_param = ""

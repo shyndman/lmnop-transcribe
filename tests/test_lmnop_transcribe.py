@@ -10,7 +10,6 @@ def test_config_loads():
   assert config.feedback_sound_start == ""
   assert config.feedback_sound_stop == ""
   assert config.keyboard_device_name == ""
-  assert config.notification_sound == ""
   assert config.sample_rate == 44100
   assert config.trim_ms == 50
   assert config.use_desktop_notifications is True

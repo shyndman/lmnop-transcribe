@@ -1,33 +1,50 @@
-import select
+import asyncio  # Import asyncio
 
-import evdev
+from .audio_recorder import record_audio  # This is now an async function
+from .trigger_handler import wait_for_start_trigger, wait_for_stop_trigger  # Import async trigger functions
+from .user_feedback import play_sound, send_notification  # These are now async functions
 
-from .audio_recorder import record_audio
-from .user_feedback import play_sound, send_notification
 
+async def record(q, device_name, sample_rate, keyboard_device, config_instance):
+  """
+  Monitors for start and stop triggers and manages audio recording.
+  """
+  print("Ready to start recording. Awaiting trigger...")
 
-def record(q, device_name, sample_rate, keyboard_device, config_instance):
-  print("Starting audio stream...")
-  if config_instance.use_desktop_notifications:
-    send_notification("Recording started...")
-  play_sound("start")
+  recording_signal = asyncio.Event()  # Create an asyncio Event for signaling recording state
+  audio_task = None  # Initialize audio task to None
 
-  recording = True
-  for audio_written in record_audio(q, device_name, int(sample_rate)):
-    if not audio_written:
-      continue
+  while True:  # Main loop to wait for triggers
+    # Wait for the start trigger
+    await wait_for_start_trigger(keyboard_device, config_instance)
 
-    r, _, _ = select.select([keyboard_device], [], [], 0)
-    if r:
-      for event in keyboard_device.read():
-        if event.type == evdev.ecodes.EV_KEY:
-          print("Stopping recording...")
-          recording = False
-          break
-    if not recording:
-      break
+    print("Starting recording...")
+    # Set the recording signal
+    recording_signal.set()
+    # Create and start the audio recording task
+    audio_task = asyncio.create_task(record_audio(q, device_name, sample_rate, recording_signal))
 
-  print("Audio stream stopped.")
-  if config_instance.use_desktop_notifications:
-    send_notification("Recording stopped.")
-  play_sound("stop")
+    if config_instance.use_desktop_notifications:
+      await send_notification("Recording started...")  # Await the async function
+    await play_sound("start")  # Await the async function
+
+    # Wait for the stop trigger
+    await wait_for_stop_trigger(keyboard_device, config_instance)
+
+    print("Stopping recording...")
+    # Clear the recording signal
+    recording_signal.clear()
+    # Cancel the audio recording task
+    if audio_task:
+      audio_task.cancel()
+      try:
+        await audio_task
+      except asyncio.CancelledError:
+        print("Audio recording task cancelled.")
+      audio_task = None  # Reset audio task
+
+    if config_instance.use_desktop_notifications:
+      await send_notification("Recording stopped.")  # Await the async function
+    await play_sound("stop")  # Await the async function
+
+    print("Ready to start recording. Awaiting trigger...")  # Loop back to wait for the next start trigger

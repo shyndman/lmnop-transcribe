@@ -11,9 +11,10 @@ def get_keyboard_device():
   keyboard_device = None
 
   print("No keyboard device name specified, attempting to use first available keyboard.")
+  keyboard_name = Config().keyboard_device_name
   if keyboard_device is None:
     for device in devices:
-      if Config().keyboard_device_name and Config().keyboard_device_name in device.name.lower():
+      if keyboard_name and keyboard_name in device.name.lower():
         keyboard_device = device
         break
       if "keyboard" in device.name.lower():

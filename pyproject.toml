@@ -20,7 +20,7 @@ repository = "https://github.com/shyndman/lmnop_transcribe"
 "Bug Tracker" = "https://github.com/shyndman/lmnop_transcribe/issues"
 
 [project.scripts]
-lmnop_transcribe = "lmnop_transcribe:main"
+lmnop-transcribe = "lmnop_transcribe:main"
 
 [build-system]
 requires = ["hatchling"]
