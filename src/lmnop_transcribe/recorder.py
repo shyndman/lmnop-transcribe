@@ -1,6 +1,7 @@
 import argparse
 import queue
 import select
+import subprocess
 from typing import cast
 
 import evdev
@@ -14,6 +15,11 @@ BLOCK_SIZE = 2048
 FILENAME = "output.wav"
 NOTIFICATION_SOUND = "path/to/notification.wav"  # Optional
 AUDIO_CLEANUP_COMMAND = "command to clean up audio"  # Optional
+TRIM_MS = 100  # Milliseconds to trim from start and end
+USE_SOX_SILENCE = False
+USE_DESKTOP_NOTIFICATIONS = True
+FEEDBACK_SOUND_START = ""
+FEEDBACK_SOUND_STOP = ""
 
 
 def main():
@@ -37,13 +43,14 @@ def main():
   for device in devices:
     print(f"  - {device.path}: {device.name}")
   keyboard_device = None
-  if KEYBOARD_DEVICE_NAME != "your_keyboard_device_name":
-    for device in devices:
-      if device.name == KEYBOARD_DEVICE_NAME:
-        keyboard_device = device
-        break
-  else:
-    print("No keyboard device name specified, attempting to use first available keyboard.")
+  # Remove keyboard device name check
+  # if KEYBOARD_DEVICE_NAME != "":
+  #   for device in devices:
+  #     if device.name == KEYBOARD_DEVICE_NAME:
+  #       keyboard_device = device
+  #       break
+  # else:
+  print("No keyboard device name specified, attempting to use first available keyboard.")
 
   if keyboard_device is None:
     for device in devices:
@@ -79,6 +86,10 @@ def main():
     )
 
     print("Starting audio stream...")
+    if USE_DESKTOP_NOTIFICATIONS:
+      send_notification("Recording started...")
+    if FEEDBACK_SOUND_START:
+      play_sound(FEEDBACK_SOUND_START)
     with stream:
       print("Recording... Press any key to stop.")
       recording = True
@@ -103,9 +114,94 @@ def main():
           except queue.Empty:
             pass
     print("Audio stream stopped.")
+    if USE_DESKTOP_NOTIFICATIONS:
+      send_notification("Recording stopped.")
+    if FEEDBACK_SOUND_STOP:
+      play_sound(FEEDBACK_SOUND_STOP)
+    if USE_SOX_SILENCE:
+      cleanup_audio(FILENAME)
   except Exception as e:
     print(f"Error: {e}")
     return
+
+
+def cleanup_audio(filename):
+  """Clean up the audio file using sox."""
+  if USE_SOX_SILENCE:
+    print("Cleaning audio using sox silence...")
+    try:
+      # Trim silence from the beginning and end of the audio
+      subprocess.run(
+        [
+          "sox",
+          filename,
+          filename,
+          "silence",
+          "1",
+          "0.1",
+          "0%",
+          "1",
+          "0.1",
+          "0%",
+        ],
+        check=True,
+      )
+    except subprocess.CalledProcessError as e:
+      print(f"Error cleaning audio with sox: {e}")
+
+  if TRIM_MS > 0:
+    print(f"Trimming {TRIM_MS}ms from start and end...")
+    try:
+      # Get the audio duration in seconds
+      duration = float(subprocess.check_output(["soxi", "-D", filename]).decode("utf-8").strip())
+      trim_seconds = TRIM_MS / 1000
+      if duration > 2 * trim_seconds:
+        # Trim the audio using sox
+        subprocess.run(
+          [
+            "sox",
+            filename,
+            filename,
+            "trim",
+            str(trim_seconds),
+            str(duration - 2 * trim_seconds),
+          ],
+          check=True,
+        )
+      else:
+        print("Audio duration is too short to trim.")
+    except subprocess.CalledProcessError as e:
+      print(f"Error trimming audio with sox: {e}")
+    except FileNotFoundError:
+      print("sox is not installed. Please install sox to use audio cleanup features.")
+  print("Audio cleanup complete.")
+
+
+def send_notification(message):
+  """Send a desktop notification."""
+  if USE_DESKTOP_NOTIFICATIONS:
+    try:
+      subprocess.run(["notify-send", message], check=True)
+    except FileNotFoundError:
+      print("notify-send is not installed. Please install it to use desktop notifications.")
+    except subprocess.CalledProcessError as e:
+      print(f"Error sending notification: {e}")
+
+
+def play_sound(filename):
+  """Play a sound effect."""
+  if filename:
+    try:
+      subprocess.run(["pw-play", filename], check=True)
+    except FileNotFoundError:
+      try:
+        subprocess.run(["paplay", filename], check=True)
+      except FileNotFoundError:
+        print("pw-play or paplay is not installed. Please install one to use sound effects.")
+      except subprocess.CalledProcessError as e:
+        print(f"Error playing sound with paplay: {e}")
+    except subprocess.CalledProcessError as e:
+      print(f"Error playing sound with pw-play: {e}")
 
 
 if __name__ == "__main__":
