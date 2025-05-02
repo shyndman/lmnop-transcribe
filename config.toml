@@ -1,0 +1,13 @@
+xkeyboard_device_name = ""
+channels = 1
+block_size = 4096
+filename = "output.wav"
+notification_sound = ""
+audio_cleanup_command = ""
+trim_ms = 50
+use_sox_silence = false
+use_desktop_notifications = true
+feedback_sound_start = ""
+feedback_sound_stop = ""
+audio_device_name = "default"
+sample_rate = 44100

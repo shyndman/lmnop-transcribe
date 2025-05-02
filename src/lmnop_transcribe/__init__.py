@@ -1,2 +1,2 @@
 def main() -> None:
-  print("Hello from lmnop_transcribe!")
+  print("Hello from !")
