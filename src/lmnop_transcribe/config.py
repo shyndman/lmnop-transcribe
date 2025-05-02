@@ -39,6 +39,7 @@ class Config:
     self._use_sox_silence = config.get("use_sox_silence", False)
     self._whisper_model_name = config.get("whisper_model_name", "small")
     self._audio_sample_rate = config.get("audio_sample_rate", 16000)
+    self._wyoming_server_address = config.get("wyoming_server_address", "localhost:8080")
 
   @property
   def audio_cleanup_command(self) -> str:
@@ -159,3 +160,11 @@ class Config:
   @audio_sample_rate.setter
   def audio_sample_rate(self, value: int):
     self._audio_sample_rate = value
+
+  @property
+  def wyoming_server_address(self) -> str:
+    return self._wyoming_server_address
+
+  @wyoming_server_address.setter
+  def wyoming_server_address(self, value: str):
+    self._wyoming_server_address = value

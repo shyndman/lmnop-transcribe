@@ -8,5 +8,6 @@
   "python.analysis.regenerateStdLibIndices": false,
   "python.analysis.userFileIndexingLimit": 4000,
   "python.languageServer": "Pylance",
-  "python.testing.pytestEnabled": true
+  "python.testing.pytestEnabled": true,
+  "ruff.lineLength": 110
 }
