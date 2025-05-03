@@ -1,51 +1,65 @@
-import asyncio  # Import asyncio
-
+import aiomultiprocess  # Import aiomultiprocess
 from loguru import logger
 
-from .audio_recorder import record_audio  # This is now an async function
+from .audio_recorder import audio_recording_process  # Import the new multiprocessing function
+from .config import Config  # Import Config to pass necessary values to the process
 from .trigger_handler import wait_for_start_trigger, wait_for_stop_trigger  # Import async trigger functions
 from .user_feedback import play_sound, send_notification  # These are now async functions
 
 
-async def record(q, device_name, sample_rate, keyboard_device, config_instance):
+async def record(keyboard_device, config: Config):
   """
-  Monitors for start and stop triggers and manages audio recording.
+  Monitors for start and stop triggers and manages audio recording process using aiomultiprocess.
   """
   logger.info("Ready to start recording. Awaiting trigger...")
 
-  recording_signal = asyncio.Event()  # Create an asyncio Event for signaling recording state
-  audio_task = None  # Initialize audio task to None
+  audio_process = None  # Initialize audio process to None
+  stop_event = None  # Initialize stop event to None
 
   while True:  # Main loop to wait for triggers
     # Wait for the start trigger
-    await wait_for_start_trigger(keyboard_device, config_instance)
+    await wait_for_start_trigger(keyboard_device, config)
 
-    logger.info("Starting recording...")
-    # Set the recording signal
-    recording_signal.set()
-    # Create and start the audio recording task
-    audio_task = asyncio.create_task(record_audio(q, device_name, sample_rate, recording_signal))
+    # Create a multiprocessing Event to signal the process to stop
+    logger.info("Starting recording process using aiomultiprocess...")
+    stop_event = aiomultiprocess.core.get_manager().Event()
 
-    if config_instance.use_desktop_notifications:
+    # Create an aiomultiprocess Process targeting the audio recording function
+    # Pass necessary config values and the stop_event to the process
+    audio_process = aiomultiprocess.Process(
+      target=audio_recording_process,
+      args=(
+        config.audio_device_name,
+        config.sample_rate,
+        config.filename,
+        config.channels,
+        config.block_size,
+        stop_event,
+      ),
+    )
+    # Start the audio recording process asynchronously
+    audio_process.start()
+    logger.info("Audio recording process started.")
+
+    if config.use_desktop_notifications:
       await send_notification("Recording started...")  # Await the async function
-    await play_sound("start")  # Await the async function
+    _ignore = play_sound("start")  # Await the async function
 
     # Wait for the stop trigger
-    await wait_for_stop_trigger(keyboard_device, config_instance)
+    await wait_for_stop_trigger(keyboard_device, config)
 
-    logger.info("Stopping recording...")
-    # Clear the recording signal
-    recording_signal.clear()
-    # Cancel the audio recording task
-    if audio_task:
-      audio_task.cancel()
-      try:
-        await audio_task
-      except asyncio.CancelledError:
-        logger.info("Audio recording task cancelled.")
-      audio_task = None  # Reset audio task
+    logger.info("Stopping recording process...")
+    # Set the stop event to signal the audio process to stop
+    if stop_event:
+      stop_event.set()
+    # Wait for the audio process to finish asynchronously
+    if audio_process and audio_process.is_alive():
+      await audio_process.join()
+      logger.info("Audio recording process joined.")
+    audio_process = None  # Reset audio process
+    stop_event = None  # Reset stop event
 
-    if config_instance.use_desktop_notifications:
+    if config.use_desktop_notifications:
       await send_notification("Recording stopped.")  # Await the async function
     await play_sound("stop")  # Await the async function
 

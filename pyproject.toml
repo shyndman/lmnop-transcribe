@@ -6,6 +6,8 @@ readme = "README.md"
 authors = [{name = "Scott Hyndman", email = "scotty.hyndman@gmail.com"}]
 requires-python = ">=3.12"
 dependencies = [
+    "aiodebug>=2.3.0",
+    "aiomultiprocess>=0.9.1",
     "evdev>=1.9.2",
     "loguru>=0.7.3",
     "numpy>=2.2.5",

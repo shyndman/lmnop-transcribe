@@ -6,6 +6,8 @@ channels = 1
 sample_rate = 22050
 # The address of the Wyoming STT server.
 wyoming_server_address = "0.0.0.0:10300"
+# The minimum severity of log emitted by the tool
+log_level = "DEBUG"
 
 # The filename to save the recorded audio to.
 filename = "output.wav"
@@ -13,7 +15,7 @@ filename = "output.wav"
 block_size = 4096
 
 # Whether to use sox to detect silence.
-use_sox_silence = false
+use_sox_silence = true
 # The amount of silence to trim from the beginning and end of the recording, in milliseconds.
 trim_ms = 50
 # The command to run to clean up the audio after recording.

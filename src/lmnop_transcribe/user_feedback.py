@@ -19,24 +19,19 @@ async def send_notification(message):  # Make async
       logger.error(f"Error sending notification: {e}")
 
 
-async def play_sound(filename):  # Make async
+async def play_sound(role):
   """Play a sound effect."""
-  if filename == "start":
+  filename = None
+  if role == "start":
     filename = Config().feedback_sound_start
-  elif filename == "stop":
+  elif role == "stop":
     filename = Config().feedback_sound_stop
+
   if filename:
     loop = asyncio.get_event_loop()
     try:
-      # Try pw-play first
-      await loop.run_in_executor(None, lambda: subprocess.run(["pw-play", filename], check=True))
-    except FileNotFoundError:
-      try:
-        # If pw-play not found, try paplay
-        await loop.run_in_executor(None, lambda: subprocess.run(["paplay", filename], check=True))
-      except FileNotFoundError:
-        logger.error("pw-play or paplay is not installed. Please install one to use sound effects.")
-      except subprocess.CalledProcessError as e:
-        logger.error(f"Error playing sound with paplay: {e}")
-    except subprocess.CalledProcessError as e:
-      logger.error(f"Error playing sound with pw-play: {e}")
+      await loop.run_in_executor(
+        None, lambda: subprocess.run(["pw-play", "--volume", "0.6", filename], check=True)
+      )
+    except subprocess.CalledProcessError:
+      logger.exception("Error playing sound with pw-play")
