@@ -8,6 +8,7 @@
 -   Stop trigger event is eventually received and detected by the application.
 -   Non-blocking file writing using `loop.run_in_executor` has been implemented (although it did not resolve the trigger responsiveness issue).
 -   Temporary audio bypass for testing confirmed audio recording is the source of trigger delay.
+-   `aiodebug` has been installed and integrated into `__main__.py` for performance monitoring.
 
 ## What's Left to Build
 
@@ -24,7 +25,7 @@ The primary issue of the unresponsive stop trigger has been diagnosed. It is cau
 
 ## Known Issues
 
--   Delayed and batched processing of `evdev` events when audio recording is active, leading to an unresponsive stop trigger. This is a known challenge with `python-evdev`'s asynchronous read loop.
+-   Delayed and batched processing of `evdev` events when audio recording is active, leading to an unresponsive stop trigger. The `playSound` function, specifically the execution of `pw-play` within it, has been identified as the direct cause of this delay.
 -   A Pylance error in `recorder.py` related to `asyncio.create_task` (potential false positive or secondary issue).
 -   Log inconsistencies (duplicate messages with different timestamp formats).
 
@@ -34,3 +35,5 @@ The primary issue of the unresponsive stop trigger has been diagnosed. It is cau
 -   Debugging revealed event loop blocking due to audio recording.
 -   Attempted non-blocking file writing as a potential solution (did not resolve the issue).
 -   Identified multiprocessing as the necessary architectural change to isolate audio handling and resolve trigger responsiveness.
+-   Discovered that the `playSound` function is the direct cause of the event processing delay.
+-   Decided to use `aiodebug` to further diagnose the event loop performance and the interaction with `playSound`.

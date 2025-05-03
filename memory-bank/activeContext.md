@@ -24,10 +24,23 @@ The primary focus is currently on debugging and resolving the issue where the st
 -   Debugging asynchronous applications requires careful observation of event flow and potential bottlenecks.
 -   Multiprocessing is a valuable pattern for isolating potentially problematic operations in Python.
 
+## Learnings and Project Insights
+
+-   Interactions between different libraries and the asyncio event loop can lead to unexpected blocking or delays.
+-   Debugging asynchronous applications requires careful observation of event flow and potential bottlenecks.
+-   Multiprocessing is a valuable pattern for isolating potentially problematic operations in Python.
+-   The `playSound` function, specifically the execution of `pw-play` within it, has been identified as the direct cause of the event processing delay, even when run in a separate thread.
+-   The fact that `libinput-record` can read events unimpeded while audio is recording suggests the issue is within our application's interaction with audio/event handling, not a system-level conflict.
+-   `aiodebug` is a useful tool for monitoring and debugging asyncio event loop performance.
+
 ## Pending Tasks and Next Steps
 
+-   Use `aiodebug` to gather detailed information about event loop activity and identify slow callbacks or hangs related to `evdev` and `playSound`.
+-   Based on `aiodebug` output, refine the handling of `evdev` events or the execution of `playSound` (e.g., try running `pw-play` in a separate process).
 -   Implement the refactoring to use `multiprocessing` for audio recording as per the plan in `memory-bank/systemPatterns.md`. This involves:
     -   Creating a new function for the audio recording logic in `src/lmnop_transcribe/audio_recorder.py`.
     -   Modifying `src/lmnop_transcribe/recorder.py` to manage the multiprocessing.Process and the multiprocessing.Event.
     -   Updating the new audio recording function to use the event for stopping.
--   Test the application after implementing multiprocessing to confirm that the stop trigger is now responsive.
+-   Test the application after implementing multiprocessing and addressing the `playSound` issue to confirm that the stop trigger is now responsive.
+-   Implement the transcription logic (currently a placeholder).
+-   Implement user feedback mechanisms (sounds and notifications are present but need full integration).
