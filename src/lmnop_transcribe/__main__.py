@@ -1,20 +1,22 @@
 import argparse
-import asyncio
+import asyncio  # Added asyncio import here as it was removed in the previous diff
 import multiprocessing
 import os
 
 import aiodebug.hang_inspection
 import aiodebug.log_slow_callbacks
 from loguru import logger
+from sdbus import request_default_bus_name_async
 
 from lmnop_transcribe.logger import initialize_logging
+
+from .dbus_service import BUS_NAME, OBJECT_PATH, DbusService
 
 # Set the multiprocessing start method to 'spawn'
 # This is necessary for compatibility when using multiprocessing with asyncio
 # and libraries like aiomultiprocess, especially on systems where the default is 'fork'.
 try:
   multiprocessing.set_start_method("spawn", force=True)
-  logger.info("Multiprocessing start method set to 'spawn'.")
 except ValueError as e:
   logger.warning(f"Could not set multiprocessing start method to 'spawn': {e}")
 
@@ -55,10 +57,18 @@ async def main_async():
 
   # Removed unused queue: q = asyncio.Queue()
 
+  # Create D-Bus interface instance
+  dbus = DbusService()
+
   try:
+    # Request bus name and export the D-Bus object
+    await request_default_bus_name_async(BUS_NAME)
+    dbus.export_to_dbus(OBJECT_PATH)
+    logger.info(f"D-Bus service '{BUS_NAME}' exported at '{OBJECT_PATH}'")
+
     # The record function now contains the main loop and handles post-recording steps.
     # We just need to await it. It will run indefinitely until interrupted.
-    await record(keyboard_device, config)
+    await record(keyboard_device, config, dbus)
 
   except asyncio.CancelledError:
     logger.info("Main task cancelled, shutting down.")
@@ -71,5 +81,5 @@ async def main_async():
       await aiodebug.hang_inspection.stop_wait(dumper)
 
 
-if __name__ == "__main__":
+def main():
   asyncio.run(main_async())  # Run the async main function

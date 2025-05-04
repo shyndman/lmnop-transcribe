@@ -2,7 +2,7 @@
 
 ## Current Work Focus
 
-There is no current work focus.
+Completed work on creating systemd service files and deployment scripts.
 
 ## Recent Changes
 
@@ -24,6 +24,7 @@ There is no current work focus.
 -   Completed integration with the Wyoming server for Speech-to-Text (STT).
 -   Completed the transcription functionality.
 -   Completed user feedback mechanisms.
+-   **D-Bus for Inter-Application Signaling:** Decided to use D-Bus as the standard mechanism for the `lmnop-transcribe` service to signal its state to other applications.
 
 ## Learnings and Project Insights
 
@@ -36,6 +37,12 @@ There is no current work focus.
 -   Careful handling of types and potential `None` values is necessary when integrating different parts of the codebase, as highlighted by the Pylance error.
 -   Removing the start noise in `playSound` resolved the immediate trigger responsiveness issue.
 
+-   Created a systemd user service file (`lmnop-transcribe.service`) for deploying the application as a background service.
+-   Created an installation script (`install-service.sh`) to automate the deployment of the service file.
+-   Updated the systemd service file's `ExecStart` command based on the `WorkingDirectory` setting.
+-   Modified the installation script to stop the service if it's running before updating and starting it.
+-   Acknowledged the user's movement of the service file to `/res` and the install script to `/scripts`.
+
 ## Pending Tasks and Next Steps
 
--   The core issue of trigger unresponsiveness has been resolved by addressing the conflict between `playSound` and audio recording, specifically by removing the start noise.
+There are no pending tasks.

@@ -19,6 +19,7 @@
 -   **Input Devices:** Relies on standard keyboard input devices accessible via `/dev/input/`.
 -   **Audio Devices:** Relies on standard audio input devices accessible via PortAudio (used by `sounddevice`).
 -   **Configuration:** Project settings are managed via a `config.toml` file.
+-   **Deployment:** Intended to be deployed as a user systemd service.
 -   **Dependencies:** Managed using `uv` and defined in `pyproject.toml`. Dependencies can be added using `uv add <package-name>`. For example, to add the `numpy` package, you would run `uv add numpy`.
 
 ## Technical Constraints

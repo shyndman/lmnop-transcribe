@@ -12,7 +12,7 @@ The LMNOP Transcribe project aims to provide a simple and efficient tool for rec
 
 ## How it Should Work
 
-The application should run in the background, monitoring for a specific start trigger. Once the start trigger is activated, it should begin recording audio from the configured device. Upon activation of a stop trigger, the recording should cease, and the recorded audio should be processed (e.g., saved and sent for transcription).
+The application is intended to be deployed and run as a background user systemd service, monitoring for a specific start trigger. Once the start trigger is activated, it should begin recording audio from the configured device. Upon activation of a stop trigger, the recording should cease, and the recorded audio should be processed (e.g., saved and sent for transcription).
 
 ## User Experience Goals
 

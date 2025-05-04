@@ -12,7 +12,6 @@ from lmnop_transcribe.logger import initialize_logging
 from .config import Config
 
 
-# New function for multiprocessing
 async def audio_recording_process(
   device_name: str, rate: int, filename: str, channels: int, blocksize: int, stop_event
 ):

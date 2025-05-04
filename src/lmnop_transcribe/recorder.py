@@ -10,22 +10,23 @@ from loguru import logger
 from .audio_processor import cleanup_audio
 from .audio_recorder import audio_recording_process  # Import the new multiprocessing function
 from .config import Config  # Import Config to pass necessary values to the process
+from .dbus_service import DbusService  # Import D-Bus interface class
 from .transcriber import transcribe_audio_with_wyoming
 from .trigger_handler import wait_for_start_trigger, wait_for_stop_trigger  # Import async trigger functions
 from .user_feedback import play_sound, send_notification  # These are now async functions
 
 
-async def record(keyboard_device, config: Config):
+async def record(keyboard_device, config: Config, dbus: DbusService):
   """
   Monitors for start and stop triggers and manages audio recording process using aiomultiprocess.
   """
   logger.info("Ready to start recording. Awaiting trigger, pid={pid}", pid=os.getpid())
 
   while True:  # Main loop to wait for triggers
-    await run_recording_cycle(keyboard_device, config)
+    await run_recording_cycle(keyboard_device, config, dbus)
 
 
-async def run_recording_cycle(keyboard_device, config: Config):
+async def run_recording_cycle(keyboard_device, config: Config, dbus: DbusService):
   """
   Runs a single audio recording and processing cycle.
   """
@@ -80,17 +81,17 @@ async def run_recording_cycle(keyboard_device, config: Config):
 
   # --- Start of moved logic ---
   logger.info("Processing recorded audio...")
-  await process_audio_file(config)
-  transcribed_text = await transcribe_recorded_audio(config)
+  await process_audio_file(config, dbus)
+  transcribed_text = await transcribe_recorded_audio(config, dbus)
   if transcribed_text is not None:
-    await paste_transcribed_text(transcribed_text)
+    await paste_transcribed_text(transcribed_text, dbus)
   # --- End of moved logic ---
 
   # Loop back to wait for the next start trigger
   logger.info("Ready to start recording. Awaiting trigger...")
 
 
-async def process_audio_file(config: Config):
+async def process_audio_file(config: Config, dbus: DbusService):
   """Applies SoX silence removal to the recorded audio file."""
   if config.use_sox_silence:
     logger.info("Applying SoX silence removal to {filename}", filename=config.filename)
@@ -99,12 +100,16 @@ async def process_audio_file(config: Config):
       loop = asyncio.get_event_loop()
       await loop.run_in_executor(None, cleanup_audio, config.filename)
       end_time = time.time()
-      logger.debug("SoX silence removal completed in %.2f seconds.", end_time - start_time)
+      logger.debug("SoX silence removal completed in {elapsed:2f} seconds.", elapsed=(end_time - start_time))
     except Exception as e:
       logger.error(f"Error during audio cleanup: {e}")
+      # Emit ErrorOccurred signal
+      error_message = f"Error during audio cleanup: {e}"
+      dbus.ErrorOccurred.emit(error_message)
+      logger.error(f"Emitted D-Bus signal: ErrorOccurred - {error_message}")
 
 
-async def transcribe_recorded_audio(config: Config) -> str | None:
+async def transcribe_recorded_audio(config: Config, dbus: DbusService) -> str | None:
   """Transcribes the recorded audio file using the Wyoming server."""
   logger.debug(f"Starting transcription for {config.filename}")
   start_time = time.time()
@@ -113,11 +118,11 @@ async def transcribe_recorded_audio(config: Config) -> str | None:
     None, transcribe_audio_with_wyoming, config.filename, config.wyoming_server_address
   )
   end_time = time.time()
-  logger.debug("Transcription completed in %.2f seconds.", end_time - start_time)
+  logger.debug("Transcription completed in {elapsed:2f} seconds.", elapsed=(end_time - start_time))
   return transcribed_text
 
 
-async def paste_transcribed_text(transcribed_text: str):
+async def paste_transcribed_text(transcribed_text: str, dbus: DbusService):
   """Pastes the transcribed text to the clipboard."""
   if transcribed_text:
     logger.bind(transcribed_text=transcribed_text).info(
@@ -132,15 +137,25 @@ async def paste_transcribed_text(transcribed_text: str):
       subprocess.run(["wl-paste"], check=True)
 
     try:
-      logger.debug("Attempting to paste text using wl-copy...")
+      logger.debug("Attempting to paste text using wl-paste...")
       start_time = time.time()
       loop = asyncio.get_event_loop()
       await loop.run_in_executor(None, clipboard_paste_command)
       end_time = time.time()
-      logger.info("Text inserted at cursor using wl-copy in %.2f seconds.", end_time - start_time)
+      logger.info(
+        "Text inserted at cursor using wl-paste in {elapsed:2f} seconds.", elapsed=(end_time - start_time)
+      )
     except FileNotFoundError:
-      logger.error("Error: 'wl-copy' command not found. Please ensure it's installed and in your PATH.")
+      logger.error("Error: 'wl-paste' command not found. Please ensure it's installed and in your PATH.")
+      # Emit ErrorOccurred signal
+      error_message = "Error: 'wl-paste' command not found. Please ensure it's installed and in your PATH."
+      dbus.ErrorOccurred.emit(error_message)
+      logger.error(f"Emitted D-Bus signal: ErrorOccurred - {error_message}")
     except subprocess.CalledProcessError as e:
-      logger.error(f"Error executing wl-copy: {e}")
+      logger.error(f"Error executing wl-paste: {e}")
+      # Emit ErrorOccurred signal
+      error_message = f"Error executing wl-paste: {e}"
+      dbus.ErrorOccurred.emit(error_message)
+      logger.error(f"Emitted D-Bus signal: ErrorOccurred - {error_message}")
   else:
     logger.warning("Transcription failed or produced no text.")

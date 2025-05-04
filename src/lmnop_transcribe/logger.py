@@ -3,7 +3,7 @@ import sys
 
 from loguru import logger
 
-from test_lmnop_transcribe import Config
+from .config import Config
 
 
 def initialize_logging(config: Config):

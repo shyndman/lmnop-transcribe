@@ -2,6 +2,9 @@
 
 ## What Works
 
+-   Created systemd user service file and installation script for deployment.
+-   Confirmed that `WorkingDirectory` in the systemd service file sets the execution directory for `ExecStart`.
+-   Included stopping the service in the installation script for idempotency.
 -   Basic application structure with trigger handling and audio recording components.
 -   Start trigger detection using Caps Lock press.
 -   Audio recording and saving to a WAV file.
@@ -23,7 +26,7 @@ Nothing is left to build.
 
 ## Current Status
 
-All core features of the LMNOP Transcribe project have been implemented.
+Core features are implemented, deployment files for a user systemd service have been created, and D-Bus signaling has been implemented.
 
 ## Known Issues
 
@@ -31,6 +34,9 @@ None
 
 ## Evolution of Project Decisions
 
+-   Decision to deploy as a user systemd service for background execution.
+-   Refinement of the systemd service file `ExecStart` command based on `WorkingDirectory` behavior.
+-   Development of an installation script to automate service deployment, including idempotency for stopping the service.
 -   Initial focus on a single-process asyncio architecture.
 -   Debugging revealed event loop blocking due to audio recording.
 -   Attempted non-blocking file writing as a potential solution (did not resolve the issue).

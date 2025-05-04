@@ -89,6 +89,7 @@ dependencies = [
     { name = "evdev" },
     { name = "loguru" },
     { name = "numpy" },
+    { name = "sdbus" },
     { name = "sounddevice" },
     { name = "soundfile" },
     { name = "toml" },
@@ -107,6 +108,7 @@ requires-dist = [
     { name = "evdev", specifier = ">=1.9.2" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "numpy", specifier = ">=2.2.5" },
+    { name = "sdbus", specifier = ">=0.14.0" },
     { name = "sounddevice", specifier = ">=0.5.1" },
     { name = "soundfile", specifier = ">=0.13.1" },
     { name = "toml", specifier = ">=0.10.2" },
@@ -207,6 +209,17 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ae/3c/c9d525a414d506893f0cd8a8d0de7706446213181570cdbd766691164e40/pytest-8.3.5.tar.gz", hash = "sha256:f4efe70cc14e511565ac476b57c279e12a855b11f48f212af1080ef2263d3845", size = 1450891, upload_time = "2025-03-02T12:54:54.503Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/30/3d/64ad57c803f1fa1e963a7946b6e0fea4a70df53c1a7fed304586539c2bac/pytest-8.3.5-py3-none-any.whl", hash = "sha256:c69214aa47deac29fad6c2a4f590b9c4a9fdb16a403176fe154b79c0b4d4d820", size = 343634, upload_time = "2025-03-02T12:54:52.069Z" },
+]
+
+[[package]]
+name = "sdbus"
+version = "0.14.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/17/9a/1dc010428fa1f444809d9aa1adb3ce231dae891b5f33635d8f4d7a8e33fd/sdbus-0.14.0.tar.gz", hash = "sha256:41d61b76cc05a9ea41d10d70a11e9f9a86ed95f40f713630c5e18340e0e4c76f", size = 89146, upload_time = "2025-04-06T20:16:45.218Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e7/de/cc625bd2c61a1ba917b7ef9f7bec5357e1d4f68ba204b3d71cf038facade/sdbus-0.14.0-cp39-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:9a5b9315090ffbe232c82edc3e6f1a449ed27c7ef7f3ebc81d73326057fba8f1", size = 767982, upload_time = "2025-04-06T20:17:06.853Z" },
+    { url = "https://files.pythonhosted.org/packages/9f/68/47baafb1cc32ef18e45d6e1f0f8ca99864d582d59da855e035c1ce3fed13/sdbus-0.14.0-cp39-abi3-manylinux_2_28_armv7l.whl", hash = "sha256:46f60ee66f18f0a3b9cb19639bc8a9ada62cd7f89343bba8a3140c0563885561", size = 696782, upload_time = "2025-04-06T20:17:08.927Z" },
+    { url = "https://files.pythonhosted.org/packages/b6/74/4a00d5dcf0037e132db404bcc770d0e49c9c088a373e8916ef8e9eb074cf/sdbus-0.14.0-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:d38597858490c2063dd3de508942688075089843ef851fb8c062cb393e8b99d5", size = 741140, upload_time = "2025-04-06T20:17:10.928Z" },
 ]
 
 [[package]]

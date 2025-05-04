@@ -21,38 +21,61 @@ To install lmnop:transcribe, follow these steps:
 3.  Create a virtual environment:
 
     ```bash
-    python3 -m venv venv
+    uv venv
     ```
 4.  Activate the virtual environment:
 
     ```bash
-    source venv/bin/activate
+    source .venv/bin/activate
     ```
 5.  Install the dependencies:
 
     ```bash
-    pip install -r requirements.txt
+    uv sync --all-extras --all-groups
     ```
 
 ## Usage
 
-To use lmnop:transcribe, run the following command:
+LMNOP Transcribe is primarily intended to be run as a background user systemd service.
 
+## Deployment as a Systemd Service
+
+To deploy LMNOP Transcribe as a user systemd service, follow these steps:
+
+    **Run the installation script:**
+    ```bash
+    ./scripts/install-service.sh
+    ```
+
+This script will copy the `lmnop-transcribe.service` file to `~/.config/systemd/user/`, reload the systemd configuration, enable the service to start on login, and start the service immediately.
+
+You can check the service status using:
 ```bash
-python -m lmnop_transcribe --config config.toml
+systemctl --user status lmnop-transcribe.service
 ```
 
-This command uses the configuration options specified in the `config.toml` file. You can modify the `config.toml` file to customize the project's behavior. The available configuration options are:
+To stop the service:
+```bash
+systemctl --user stop lmnop-transcribe.service
+```
 
-*   `xkeyboard_device_name`: The name of the keyboard device to use.
+To disable the service:
+```bash
+systemctl --user disable lmnop-transcribe.service
+```
+
+## Configuration
+
+The project's behavior is configured via the `config.toml` file. You can modify this file to customize settings such as:
+
+*   `keyboard_device_name`: The name of the keyboard device to use.
 *   `channels`: The number of audio channels to record.
 *   `block_size`: The audio block size.
-*   `filename`: The name of the output audio file.
+*   `filename`: The naxkeyboard_device_nameme of the output audio file.
 *   `audio_cleanup_command`: The command to use for audio cleanup.
 *   `trim_ms`: The number of milliseconds to trim from the start and end of the audio.
 *   `use_sox_silence`: Whether to use SoX silence detection for audio cleanup.
 *   `use_desktop_notifications`: Whether to use desktop notifications.
-*   `feedback_sound_start`: The path to the feedback sound file for start recording.
 *   `feedback_sound_stop`: The path to the feedback sound file for stop recording.
 *   `audio_device_name`: The name of the audio device to use.
 *   `sample_rate`: The audio sample rate.
