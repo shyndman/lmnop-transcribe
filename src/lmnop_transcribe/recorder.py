@@ -21,105 +21,126 @@ async def record(keyboard_device, config: Config):
   """
   logger.info("Ready to start recording. Awaiting trigger, pid={pid}", pid=os.getpid())
 
+  while True:  # Main loop to wait for triggers
+    await run_recording_cycle(keyboard_device, config)
+
+
+async def run_recording_cycle(keyboard_device, config: Config):
+  """
+  Runs a single audio recording and processing cycle.
+  """
   audio_process = None  # Initialize audio process to None
   stop_event = None  # Initialize stop event to None
 
-  while True:  # Main loop to wait for triggers
-    # Wait for the start trigger
-    await wait_for_start_trigger(keyboard_device, config)
+  # Wait for the start trigger
+  await wait_for_start_trigger(keyboard_device, config)
 
-    # Create a multiprocessing Event to signal the process to stop
-    logger.info("Starting recording process using aiomultiprocess...")
-    stop_event = aiomultiprocess.core.get_manager().Event()
+  # Create a multiprocessing Event to signal the process to stop
+  logger.info("Starting recording process using aiomultiprocess...")
+  stop_event = aiomultiprocess.core.get_manager().Event()
 
-    # Create an aiomultiprocess Process targeting the audio recording function
-    # Pass necessary config values and the stop_event to the process
-    audio_process = aiomultiprocess.Process(
-      target=audio_recording_process,
-      args=(
-        config.audio_device_name,
-        config.sample_rate,
-        config.filename,
-        config.channels,
-        config.block_size,
-        stop_event,
-      ),
-    )
-    # Start the audio recording process asynchronously
-    audio_process.start()
-    logger.info("Audio recording process started.")
+  # Create an aiomultiprocess Process targeting the audio recording function
+  # Pass necessary config values and the stop_event to the process
+  audio_process = aiomultiprocess.Process(
+    target=audio_recording_process,
+    args=(
+      config.audio_device_name,
+      config.sample_rate,
+      config.filename,
+      config.channels,
+      config.block_size,
+      stop_event,
+    ),
+  )
+  # Start the audio recording process asynchronously
+  audio_process.start()
+  logger.info("Audio recording process started.")
 
-    if config.use_desktop_notifications:
-      await send_notification("Recording started...")  # Await the async function
-    _ignore = play_sound("start")  # Await the async function
+  if config.use_desktop_notifications:
+    await send_notification("Recording started...")  # Await the async function
+  _ignore = play_sound("start")  # Await the async function
 
-    # Wait for the stop trigger
-    await wait_for_stop_trigger(keyboard_device, config)
+  # Wait for the stop trigger
+  await wait_for_stop_trigger(keyboard_device, config)
 
-    logger.info("Stopping recording process...")
-    # Set the stop event to signal the audio process to stop
-    if stop_event:
-      stop_event.set()
-    # Wait for the audio process to finish asynchronously
-    if audio_process and audio_process.is_alive():
-      await audio_process.join()
-      logger.info("Audio recording process joined.")
-    audio_process = None  # Reset audio process
-    stop_event = None  # Reset stop event
+  logger.info("Stopping recording process...")
+  # Set the stop event to signal the audio process to stop
+  if stop_event:
+    stop_event.set()
+  # Wait for the audio process to finish asynchronously
+  if audio_process and audio_process.is_alive():
+    await audio_process.join()
+    logger.info("Audio recording process joined.")
+  audio_process = None  # Reset audio process
+  stop_event = None  # Reset stop event
 
-    if config.use_desktop_notifications:
-      await send_notification("Recording stopped.")  # Await the async function
-    _nowait = play_sound("stop")  # Await the async function
+  if config.use_desktop_notifications:
+    await send_notification("Recording stopped.")  # Await the async function
+  _nowait = play_sound("stop")  # Await the async function
 
-    # --- Start of moved logic ---
-    logger.info("Processing recorded audio...")
-    loop = asyncio.get_event_loop()
+  # --- Start of moved logic ---
+  logger.info("Processing recorded audio...")
+  await process_audio_file(config)
+  transcribed_text = await transcribe_recorded_audio(config)
+  if transcribed_text is not None:
+    await paste_transcribed_text(transcribed_text)
+  # --- End of moved logic ---
 
-    if config.use_sox_silence:
-      logger.info("Applying SoX silence removal to {filename}", filename=config.filename)
-      start_time = time.time()
-      try:
-        # Run cleanup_audio in executor as it might be blocking
-        await loop.run_in_executor(None, cleanup_audio, config.filename)
-        end_time = time.time()
-        logger.debug("SoX silence removal completed in %.2f seconds.", end_time - start_time)
-      except Exception as e:
-        logger.error(f"Error during audio cleanup: {e}")
+  # Loop back to wait for the next start trigger
+  logger.info("Ready to start recording. Awaiting trigger...")
 
-    # Run transcription in a thread pool executor
-    logger.debug(f"Starting transcription for {config.filename}")
+
+async def process_audio_file(config: Config):
+  """Applies SoX silence removal to the recorded audio file."""
+  if config.use_sox_silence:
+    logger.info("Applying SoX silence removal to {filename}", filename=config.filename)
     start_time = time.time()
-    transcribed_text = await loop.run_in_executor(
-      None, transcribe_audio_with_wyoming, config.filename, config.wyoming_server_address
+    try:
+      loop = asyncio.get_event_loop()
+      await loop.run_in_executor(None, cleanup_audio, config.filename)
+      end_time = time.time()
+      logger.debug("SoX silence removal completed in %.2f seconds.", end_time - start_time)
+    except Exception as e:
+      logger.error(f"Error during audio cleanup: {e}")
+
+
+async def transcribe_recorded_audio(config: Config) -> str | None:
+  """Transcribes the recorded audio file using the Wyoming server."""
+  logger.debug(f"Starting transcription for {config.filename}")
+  start_time = time.time()
+  loop = asyncio.get_event_loop()
+  transcribed_text = await loop.run_in_executor(
+    None, transcribe_audio_with_wyoming, config.filename, config.wyoming_server_address
+  )
+  end_time = time.time()
+  logger.debug("Transcription completed in %.2f seconds.", end_time - start_time)
+  return transcribed_text
+
+
+async def paste_transcribed_text(transcribed_text: str):
+  """Pastes the transcribed text to the clipboard."""
+  if transcribed_text:
+    logger.bind(transcribed_text=transcribed_text).info(
+      'Transcribed text available, "{text}"', text=transcribed_text
     )
-    end_time = time.time()
-    logger.debug("Transcription completed in %.2f seconds.", end_time - start_time)
 
-    if transcribed_text:
-      logger.bind(transcribed_text=transcribed_text).info(
-        'Transcribed text available, "{text}"', text=transcribed_text
-      )
+    # Ensure wl-copy is only called when transcribed_text is not None
+    # Define the lambda inside the check to help type checker
+    def clipboard_paste_command():
+      text = cast(str, transcribed_text)
+      subprocess.run(["wl-copy", text], check=True)
+      subprocess.run(["wl-paste"], check=True)
 
-      # Ensure wl-copy is only called when transcribed_text is not None
-      # Define the lambda inside the check to help type checker
-      def clipboard_paste_command():
-        text = cast(str, transcribed_text)
-        subprocess.run(["wl-copy", text], check=True)
-        subprocess.run(["wl-paste"], check=True)
-
-      try:
-        logger.debug("Attempting to paste text using wl-copy...")
-        start_time = time.time()
-        await loop.run_in_executor(None, clipboard_paste_command)
-        end_time = time.time()
-        logger.info("Text inserted at cursor using wl-copy in %.2f seconds.", end_time - start_time)
-      except FileNotFoundError:
-        logger.error("Error: 'wl-copy' command not found. Please ensure it's installed and in your PATH.")
-      except subprocess.CalledProcessError as e:
-        logger.error(f"Error executing wl-copy: {e}")
-    else:
-      logger.warning("Transcription failed or produced no text.")
-    # --- End of moved logic ---
-
-    # Loop back to wait for the next start trigger
-    logger.info("Ready to start recording. Awaiting trigger...")
+    try:
+      logger.debug("Attempting to paste text using wl-copy...")
+      start_time = time.time()
+      loop = asyncio.get_event_loop()
+      await loop.run_in_executor(None, clipboard_paste_command)
+      end_time = time.time()
+      logger.info("Text inserted at cursor using wl-copy in %.2f seconds.", end_time - start_time)
+    except FileNotFoundError:
+      logger.error("Error: 'wl-copy' command not found. Please ensure it's installed and in your PATH.")
+    except subprocess.CalledProcessError as e:
+      logger.error(f"Error executing wl-copy: {e}")
+  else:
+    logger.warning("Transcription failed or produced no text.")
