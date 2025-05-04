@@ -49,3 +49,23 @@ async def wait_for_stop_trigger(device: evdev.InputDevice, config: Config):
         logger.info("Stop trigger detected (Caps Lock Up)")
         return  # Trigger detected, exit the await
       # Add other trigger types here based on config and trigger_param
+
+
+async def wait_for_cancel_trigger(device: evdev.InputDevice, config: Config):
+  """Awaits the cancel recording trigger (Left Shift Down)."""
+  logger.info("Awaiting cancel trigger: Left Shift Down")
+
+  async for event in device.async_read_loop():
+    logger.trace(
+      "Received event: type={type}, code={code}, value={value}",
+      type=event.type,
+      code=event.code,
+      value=event.value,
+    )
+    if event.type == evdev.ecodes.EV_KEY:
+      logger.trace(
+        "is KEY event",
+      )
+      if event.code == evdev.ecodes.KEY_LEFTSHIFT and event.value == 1:
+        logger.info("Cancel trigger detected (Left Shift Down)")
+        return  # Trigger detected, exit the await

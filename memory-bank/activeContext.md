@@ -2,7 +2,7 @@
 
 ## Current Work Focus
 
-Completed work on creating systemd service files and deployment scripts.
+Recording cancellation feature implemented and refactored.
 
 ## Recent Changes
 
@@ -17,6 +17,7 @@ Completed work on creating systemd service files and deployment scripts.
 -   Added logging for time elapsed during audio recording in `src/lmnop_transcribe/audio_recorder.py`.
 -   Added timing measurements for external calls (SoX, transcription, clipboard paste) in `src/lmnop_transcribe/recorder.py`.
 -   Removed all references to the start sound from `config.toml`, `src/lmnop_transcribe/user_feedback.py`, and `src/lmnop_transcribe/config.py`.
+-   Implemented recording cancellation feature: Added `wait_for_cancel_trigger` to `trigger_handler.py` and modified `recorder.py` to use `asyncio.wait` for a race between stop and cancel triggers. Refactored `run_recording_cycle` to use `handle_stop` and `handle_cancel` functions.
 
 ## Active Decisions and Considerations
 
