@@ -22,9 +22,7 @@ async def send_notification(message):  # Make async
 async def play_sound(role):
   """Play a sound effect."""
   filename = None
-  if role == "start":
-    filename = Config().feedback_sound_start
-  elif role == "stop":
+  if role == "stop":
     filename = Config().feedback_sound_stop
 
   if filename:

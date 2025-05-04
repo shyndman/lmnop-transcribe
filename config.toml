@@ -23,8 +23,6 @@ audio_cleanup_command = ""
 
 # The name of the xkeyboard device to use. Defaults to the system default.
 keyboard_device_name = "default"
-# The path to the sound to play when recording starts.
-feedback_sound_start = "assets/start.mp3"
 # The path to the sound to play when recording stops.
 feedback_sound_stop = "assets/stop.mp3"
 # Whether to use desktop notifications to alert the user when transcription is complete.

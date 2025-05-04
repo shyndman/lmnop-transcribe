@@ -19,35 +19,29 @@ def transcribe_audio_with_wyoming(audio_file, wyoming_server_address):
         frame_rate = wf.getframerate()
         sample_width = wf.getsampwidth()
         num_channels = wf.getnchannels()
+        io = s.makefile("wb")
 
         # Send transcribe event
-        write_event(Transcribe().event(), s.makefile("wb"))
+        write_event(Transcribe().event(), io)
+        write_event(AudioStart(rate=frame_rate, width=sample_width, channels=num_channels).event(), io)
 
-        # Send audio start
-        write_event(
-          AudioStart(rate=frame_rate, width=sample_width, channels=num_channels).event(), s.makefile("wb")
-        )
-
-        # Send audio chunks
         while True:
-          audio_data = wf.readframes(1024)  # Adjust chunk size as needed
-          if not audio_data:
+          # audio_data =   # Adjust chunk size as needed
+          if audio_data := wf.readframes(1024):
+            write_event(
+              AudioChunk(
+                rate=frame_rate, width=sample_width, channels=num_channels, audio=audio_data
+              ).event(),
+              io,
+            )
+          else:
             break
 
-          chunk = AudioChunk(
-            rate=frame_rate,
-            width=sample_width,
-            channels=num_channels,
-            audio=audio_data,
-          )
-          write_event(chunk.event(), s.makefile("wb"))
-
         # Send audio stop
-        write_event(AudioStop().event(), s.makefile("wb"))
+        write_event(AudioStop().event(), io)
 
         # Receive transcript
         transcript_event = read_event(s.makefile("rb"))
-
         if transcript_event and Transcript.is_type(transcript_event.type):
           transcript = Transcript.from_event(transcript_event)
           transcribed_text = transcript.text.strip()
