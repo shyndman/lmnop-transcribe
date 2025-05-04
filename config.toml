@@ -12,7 +12,7 @@ log_level = "DEBUG"
 # The filename to save the recorded audio to.
 filename = "output.wav"
 # The block size to use when recording audio.
-block_size = 4096
+block_size = 8192
 
 # Whether to use sox to detect silence.
 use_sox_silence = true
