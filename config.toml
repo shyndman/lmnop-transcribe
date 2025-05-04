@@ -15,7 +15,7 @@ filename = "output.wav"
 block_size = 8192
 
 # Whether to use sox to detect silence.
-use_sox_silence = true
+use_sox_silence = false
 # The amount of silence to trim from the beginning and end of the recording, in milliseconds.
 trim_ms = 50
 # The command to run to clean up the audio after recording.
