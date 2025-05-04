@@ -28,7 +28,7 @@ feedback_sound_start = "assets/start.mp3"
 # The path to the sound to play when recording stops.
 feedback_sound_stop = "assets/stop.mp3"
 # Whether to use desktop notifications to alert the user when transcription is complete.
-use_desktop_notifications = true
+use_desktop_notifications = false
 
 [trigger]
 # The type of trigger to start recording (e.g., "caps_lock").
