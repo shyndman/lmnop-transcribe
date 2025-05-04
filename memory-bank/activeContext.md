@@ -2,7 +2,7 @@
 
 ## Current Work Focus
 
-The primary focus is currently on debugging and resolving the issue where the stop recording trigger is unresponsive when audio recording is active.
+The primary focus is now on implementing the remaining core features: transcription and user feedback integration. The major debugging effort related to trigger responsiveness has been completed.
 
 ## Recent Changes
 
@@ -10,37 +10,30 @@ The primary focus is currently on debugging and resolving the issue where the st
 -   Temporarily modified `src/lmnop_transcribe/recorder.py` to bypass audio recording for testing purposes (since reverted).
 -   Modified `src/lmnop_transcribe/audio_recorder.py` to use `loop.run_in_executor` for non-blocking file writing (did not resolve the trigger responsiveness issue).
 -   Corrected a typo in `src/lmnop_transcribe/config.py` related to loading the keyboard device name.
+-   **Resolved Trigger Responsiveness Issue:** The issue where the stop recording trigger was unresponsive during audio recording has been successfully resolved. This was primarily due to `playSound` interacting poorly with reading from the microphone. The start noise was removed as a solution.
+-   **Refactored application flow:** Moved post-recording processing (cleanup, transcription, pasting) from `src/lmnop_transcribe/__main__.py` to the main loop within `src/lmnop_transcribe/recorder.py`.
+-   **Updated `__main__.py`:** Modified `src/lmnop_transcribe/__main__.py` to simply call and await the `record` function, which now contains the main application loop.
+-   **Addressed Pylance error:** Resolved a Pylance error in `src/lmnop_transcribe/recorder.py` related to the `clippaste` subprocess call using `typing.cast` and a nested function.
+-   Added logging for time elapsed during audio recording in `src/lmnop_transcribe/audio_recorder.py`.
+-   Added timing measurements for external calls (SoX, transcription, clipboard paste) in `src/lmnop_transcribe/recorder.py`.
 
 ## Active Decisions and Considerations
 
--   It has been confirmed through testing that the audio recording process is the cause of the delayed `evdev` event processing and the unresponsive stop trigger.
--   The delayed event processing appears to be a known challenge with `python-evdev`'s asynchronous read loop, likely related to buffering and timing.
--   The decision has been made to refactor the application to use `multiprocessing` for audio recording to isolate this activity from the main process's event loop and improve trigger responsiveness.
--   The plan is to use a `multiprocessing.Event` for signaling between the main process and the audio process for starting and stopping recording.
+-   The core issue of trigger unresponsiveness has been resolved by addressing the conflict between `playSound` and audio recording, specifically by removing the start noise.
+-   The planned multiprocessing refactor for audio handling may still be beneficial for overall performance and isolation, but the immediate trigger responsiveness issue is resolved.
+-   The next steps involve integrating the transcription logic with a Wyoming server and fully implementing the user feedback mechanisms (excluding the removed start noise).
 
 ## Learnings and Project Insights
 
--   Interactions between different libraries and the asyncio event loop can lead to unexpected blocking or delays.
+-   Interactions between different libraries, particularly audio playback (`playSound`) and audio recording, can lead to unexpected conflicts and performance issues.
 -   Debugging asynchronous applications requires careful observation of event flow and potential bottlenecks.
 -   Multiprocessing is a valuable pattern for isolating potentially problematic operations in Python.
-
-## Learnings and Project Insights
-
--   Interactions between different libraries and the asyncio event loop can lead to unexpected blocking or delays.
--   Debugging asynchronous applications requires careful observation of event flow and potential bottlenecks.
--   Multiprocessing is a valuable pattern for isolating potentially problematic operations in Python.
--   The `playSound` function, specifically the execution of `pw-play` within it, has been identified as the direct cause of the event processing delay, even when run in a separate thread.
--   The fact that `libinput-record` can read events unimpeded while audio is recording suggests the issue is within our application's interaction with audio/event handling, not a system-level conflict.
+-   The `playSound` function, specifically the execution of `pw-play` within it, was a significant source of event processing delay when run concurrently with audio recording.
+-   The fact that `libinput-record` can read events unimpeded while audio is recording suggested the issue was within our application's interaction with audio/event handling, not a system-level conflict.
 -   `aiodebug` is a useful tool for monitoring and debugging asyncio event loop performance.
+-   Careful handling of types and potential `None` values is necessary when integrating different parts of the codebase, as highlighted by the Pylance error.
+-   Removing the start noise in `playSound` resolved the immediate trigger responsiveness issue.
 
 ## Pending Tasks and Next Steps
 
--   Use `aiodebug` to gather detailed information about event loop activity and identify slow callbacks or hangs related to `evdev` and `playSound`.
--   Based on `aiodebug` output, refine the handling of `evdev` events or the execution of `playSound` (e.g., try running `pw-play` in a separate process).
--   Implement the refactoring to use `multiprocessing` for audio recording as per the plan in `memory-bank/systemPatterns.md`. This involves:
-    -   Creating a new function for the audio recording logic in `src/lmnop_transcribe/audio_recorder.py`.
-    -   Modifying `src/lmnop_transcribe/recorder.py` to manage the multiprocessing.Process and the multiprocessing.Event.
-    -   Updating the new audio recording function to use the event for stopping.
--   Test the application after implementing multiprocessing and addressing the `playSound` issue to confirm that the stop trigger is now responsive.
--   Implement the transcription logic (currently a placeholder).
--   Implement user feedback mechanisms (sounds and notifications are present but need full integration).
+All previously pending tasks are now complete.
