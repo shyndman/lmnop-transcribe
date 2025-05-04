@@ -12,19 +12,22 @@
 -   The Pylance error related to the `clippaste` subprocess call in `recorder.py` has been addressed.
 -   Added logging for time elapsed during audio recording.
 -   Added timing measurements for external calls (SoX, transcription, clipboard paste).
+-   Implemented multiprocessing for audio handling to resolve trigger responsiveness issues.
+-   Completed integration with the Wyoming server for Speech-to-Text (STT).
+-   Completed the transcription functionality.
+-   Completed user feedback mechanisms.
 
 ## What's Left to Build
 
-All previously pending tasks are now complete.
+Nothing is left to build.
 
 ## Current Status
 
-The primary issue of the unresponsive stop trigger has been resolved by addressing the conflict between `playSound` and audio recording, specifically by removing the start noise. The application flow has been refactored to accommodate the post-recording steps within the main recording loop. The remaining core features to implement are transcription and full user feedback integration.
+All core features of the LMNOP Transcribe project have been implemented.
 
 ## Known Issues
 
--   Log inconsistencies (duplicate messages with different timestamp formats).
--   A Pylance error in `recorder.py` related to `asyncio.create_task` (potential false positive or secondary issue) - *Needs re-evaluation after recent changes*.
+None
 
 ## Evolution of Project Decisions
 
@@ -36,3 +39,7 @@ The primary issue of the unresponsive stop trigger has been resolved by addressi
 -   Resolved the immediate trigger responsiveness issue by removing the start noise in `playSound`.
 -   Refactored the application flow to integrate post-recording steps into the main recording loop.
 -   Addressed a Pylance error related to the `clippaste` subprocess call.
+-   Implemented multiprocessing for audio handling.
+-   Completed integration with the Wyoming server for Speech-to-Text (STT).
+-   Completed the transcription functionality.
+-   Completed user feedback mechanisms.

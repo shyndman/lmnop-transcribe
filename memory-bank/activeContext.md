@@ -2,7 +2,7 @@
 
 ## Current Work Focus
 
-The primary focus is now on implementing the remaining core features: transcription and user feedback integration. The major debugging effort related to trigger responsiveness has been completed.
+There is no current work focus.
 
 ## Recent Changes
 
@@ -16,12 +16,14 @@ The primary focus is now on implementing the remaining core features: transcript
 -   **Addressed Pylance error:** Resolved a Pylance error in `src/lmnop_transcribe/recorder.py` related to the `clippaste` subprocess call using `typing.cast` and a nested function.
 -   Added logging for time elapsed during audio recording in `src/lmnop_transcribe/audio_recorder.py`.
 -   Added timing measurements for external calls (SoX, transcription, clipboard paste) in `src/lmnop_transcribe/recorder.py`.
+-   Removed all references to the start sound from `config.toml`, `src/lmnop_transcribe/user_feedback.py`, and `src/lmnop_transcribe/config.py`.
 
 ## Active Decisions and Considerations
 
--   The core issue of trigger unresponsiveness has been resolved by addressing the conflict between `playSound` and audio recording, specifically by removing the start noise.
--   The planned multiprocessing refactor for audio handling may still be beneficial for overall performance and isolation, but the immediate trigger responsiveness issue is resolved.
--   The next steps involve integrating the transcription logic with a Wyoming server and fully implementing the user feedback mechanisms (excluding the removed start noise).
+-   Implemented multiprocessing for audio handling to resolve trigger responsiveness issues.
+-   Completed integration with the Wyoming server for Speech-to-Text (STT).
+-   Completed the transcription functionality.
+-   Completed user feedback mechanisms.
 
 ## Learnings and Project Insights
 
@@ -36,4 +38,4 @@ The primary focus is now on implementing the remaining core features: transcript
 
 ## Pending Tasks and Next Steps
 
-All previously pending tasks are now complete.
+-   The core issue of trigger unresponsiveness has been resolved by addressing the conflict between `playSound` and audio recording, specifically by removing the start noise.
