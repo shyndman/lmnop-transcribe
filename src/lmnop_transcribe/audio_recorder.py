@@ -67,16 +67,17 @@ async def audio_recording_process(
         data = q_local.get(timeout=0.1)
         file.write(data)
 
-        elapsed_time = time.time() - start_time
-        logger.info("Recording elapsed time: %.2f seconds", elapsed_time)
-
-        logger.debug(f"Wrote {len(data)} samples to file in process")
+        elapsed = time.time() - start_time
+        logger.debug(
+          "Wrote {length} samples to file in process, {elapsed:1f}s", length=len(data), elapsed=elapsed
+        )
       except queue.Empty:
         pass  # No data in queue, check event again
       except Exception as e:
         logger.error(f"Error in audio processing loop in process: {e}")
         break  # Exit loop on other errors
 
+    logger.info("Finished record {elapsed:2f} seconds of audio", elapsed=(time.time() - start_time))
   except Exception as e:
     logger.exception(f"Error initializing audio stream or file in process: {e}")
 

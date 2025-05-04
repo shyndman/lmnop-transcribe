@@ -49,8 +49,6 @@ async def main_async():
   # Enable checks for bad asynchronous API usage
   dumper = initialize_asyncio_debugging()
 
-  device_name = config.audio_device_name
-  sample_rate = config.sample_rate
   keyboard_device = get_keyboard_device()
   if keyboard_device is None:
     return
@@ -74,4 +72,4 @@ async def main_async():
 
 
 if __name__ == "__main__":
-  asyncio.run(main_async(), debug=True)  # Run the async main function
+  asyncio.run(main_async())  # Run the async main function
