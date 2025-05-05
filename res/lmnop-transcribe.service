@@ -4,9 +4,9 @@ After=network.target
 
 [Service]
 Type=exec
-ExecStart=/bin/bash -c '. .venv/bin/activate && .venv/bin/lmnop-transcribe --config ./config.toml'
+ExecStart=/bin/bash -c '. ./.venv/bin/activate && ./.venv/bin/lmnop-transcribe --config ./config.toml'
 Restart=on-failure
-WorkingDirectory=/home/shyndman/dev/projects/lmnop-transcribe/
+WorkingDirectory=__PROJECT_PATH__
 
 [Install]
 WantedBy=default.target

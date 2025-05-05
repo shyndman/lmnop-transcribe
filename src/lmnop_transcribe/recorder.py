@@ -2,7 +2,8 @@ import asyncio
 import os
 import subprocess
 import time
-from typing import cast
+from multiprocessing.synchronize import Event
+from typing import Optional, cast
 
 import aiomultiprocess  # Import aiomultiprocess
 from loguru import logger
@@ -13,9 +14,8 @@ from .config import Config  # Import Config to pass necessary values to the proc
 from .dbus_service import DbusService  # Import D-Bus interface class
 from .transcriber import transcribe_audio_with_wyoming
 from .trigger_handler import (  # Import async trigger functions
-  wait_for_cancel_trigger,
   wait_for_start_trigger,
-  wait_for_stop_trigger,
+  wait_for_stop_or_cancel_trigger,
 )
 from .user_feedback import play_sound, send_notification  # These are now async functions
 
@@ -42,7 +42,7 @@ async def run_recording_cycle(keyboard_device, config: Config, dbus: DbusService
 
   # Create a multiprocessing Event to signal the process to stop
   logger.info("Starting recording process using aiomultiprocess...")
-  stop_event = aiomultiprocess.core.get_manager().Event()
+  stop_event = cast(Event, aiomultiprocess.core.get_manager().Event())
 
   # Create an aiomultiprocess Process targeting the audio recording function
   # Pass necessary config values and the stop_event to the process
@@ -66,61 +66,28 @@ async def run_recording_cycle(keyboard_device, config: Config, dbus: DbusService
   _ignore = play_sound("start")  # Await the async function
 
   # Wait for either the stop or cancel trigger
-  stop_task = asyncio.create_task(wait_for_stop_trigger(keyboard_device, config))
-  cancel_task = asyncio.create_task(wait_for_cancel_trigger(keyboard_device, config))
+  trigger_type = await wait_for_stop_or_cancel_trigger(keyboard_device, config)
 
-  done, pending = await asyncio.wait([stop_task, cancel_task], return_when=asyncio.FIRST_COMPLETED)
-
-  if stop_task in done:
-    logger.info("Stop trigger received.")
-    # Cancel the other task
-    cancel_task.cancel()
-    try:
-      await cancel_task
-    except asyncio.CancelledError:
-      pass  # Expected cancellation
-
-    logger.info("Stopping recording process...")
-    # Set the stop event to signal the audio process to stop
-    if stop_event:
-      stop_event.set()
-    # Wait for the audio process to finish asynchronously
-    if audio_process and audio_process.is_alive():
-      await audio_process.join()
-      logger.info("Audio recording process joined.")
-    audio_process = None  # Reset audio process
-    stop_event = None  # Reset stop event
-
-    if config.use_desktop_notifications:
-      await send_notification("Recording stopped.")  # Await the async function
-    _nowait = play_sound("stop")  # Await the async function
-
-    # --- Start of moved logic ---
-    logger.info("Processing recorded audio...")
-    await process_audio_file(config, dbus)
-    transcribed_text = await transcribe_recorded_audio(config, dbus)
-    if transcribed_text is not None:
-      await paste_transcribed_text(transcribed_text, dbus)
-    # --- End of moved logic ---
+  if trigger_type == "stop":
+    await handle_stop(audio_process, stop_event, config, dbus)
 
     # Loop back to wait for the next start trigger
     logger.info("Ready to start recording. Awaiting trigger...")
 
-  elif cancel_task in done:
-    await handle_cancel(stop_task, audio_process, stop_event, config, dbus)
+  elif trigger_type == "cancel":
+    await handle_cancel(audio_process, stop_event, config, dbus)
     # Return from this function to go back to the main loop in record
     return
 
 
-async def handle_stop(stop_task, cancel_task, audio_process, stop_event, config, dbus):
+async def handle_stop(
+  audio_process: aiomultiprocess.Process | None,
+  stop_event: Event | None,
+  config: Config,
+  dbus: DbusService,
+):
   """Handles the stop recording trigger."""
   logger.info("Stop trigger received.")
-  # Cancel the other task
-  cancel_task.cancel()
-  try:
-    await cancel_task
-  except asyncio.CancelledError:
-    pass  # Expected cancellation
 
   logger.info("Stopping recording process...")
   # Set the stop event to signal the audio process to stop
@@ -146,15 +113,14 @@ async def handle_stop(stop_task, cancel_task, audio_process, stop_event, config,
   # --- End of moved logic ---
 
 
-async def handle_cancel(stop_task, audio_process, stop_event, config, dbus):
+async def handle_cancel(
+  audio_process: Optional[aiomultiprocess.Process],
+  stop_event: Optional[Event],
+  config: Config,
+  dbus: DbusService,
+):
   """Handles the cancel recording trigger."""
   logger.info("Cancel trigger received. Stopping recording and removing file.")
-  # Cancel the other task
-  stop_task.cancel()
-  try:
-    await stop_task
-  except asyncio.CancelledError:
-    pass  # Expected cancellation
 
   # Set the stop event to signal the audio process to stop
   if stop_event:

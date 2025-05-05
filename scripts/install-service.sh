@@ -23,6 +23,12 @@ fi
 echo "Copying service file to systemd user directory..."
 cp ../res/$SERVICE_FILE "$SERVICE_DIR/"
 
+# Get the absolute path of the project directory
+PROJECT_PATH="$(cd .. && pwd)"
+
+echo "Injecting project path ($PROJECT_PATH) into service file..."
+sed -i "s|__PROJECT_PATH__|$PROJECT_PATH|g" "$SERVICE_DIR/$SERVICE_FILE"
+
 echo "Reloading systemd manager configuration..."
 systemctl --user daemon-reload
 

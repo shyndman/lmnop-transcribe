@@ -27,12 +27,12 @@ async def wait_for_start_trigger(device: evdev.InputDevice, config: Config):
       # Add other trigger types here based on config and trigger_param
 
 
-async def wait_for_stop_trigger(device: evdev.InputDevice, config: Config):
-  """Awaits the configured stop recording trigger."""
-  trigger_type = config.stop_trigger_type
-  # trigger_param = config.stop_trigger_param # Not used in this basic example yet
+async def wait_for_stop_or_cancel_trigger(device: evdev.InputDevice, config: Config) -> str:
+  """Awaits either the stop or cancel recording trigger."""
+  stop_trigger_type = config.stop_trigger_type
+  cancel_trigger_code = evdev.ecodes.KEY_LEFTSHIFT  # Assuming Left Shift for cancel
 
-  logger.info(f"Awaiting stop trigger: {trigger_type}")
+  logger.info(f"Awaiting stop trigger ({stop_trigger_type}) or cancel trigger (Left Shift Down)")
 
   async for event in device.async_read_loop():
     logger.trace(
@@ -42,30 +42,16 @@ async def wait_for_stop_trigger(device: evdev.InputDevice, config: Config):
       value=event.value,
     )
     if event.type == evdev.ecodes.EV_KEY:
-      logger.trace(
-        "is KEY event",
-      )
-      if trigger_type == "caps_lock" and event.code == evdev.ecodes.KEY_CAPSLOCK and event.value == 0:
+      logger.trace("is KEY event")
+      # Check for stop trigger
+      if stop_trigger_type == "caps_lock" and event.code == evdev.ecodes.KEY_CAPSLOCK and event.value == 0:
         logger.info("Stop trigger detected (Caps Lock Up)")
-        return  # Trigger detected, exit the await
+        return "stop"
+      # Check for cancel trigger (Left Shift Down)
+      if event.code == cancel_trigger_code and event.value == 1:
+        logger.info("Cancel trigger detected (Left Shift Down)")
+        return "cancel"
       # Add other trigger types here based on config and trigger_param
 
-
-async def wait_for_cancel_trigger(device: evdev.InputDevice, config: Config):
-  """Awaits the cancel recording trigger (Left Shift Down)."""
-  logger.info("Awaiting cancel trigger: Left Shift Down")
-
-  async for event in device.async_read_loop():
-    logger.trace(
-      "Received event: type={type}, code={code}, value={value}",
-      type=event.type,
-      code=event.code,
-      value=event.value,
-    )
-    if event.type == evdev.ecodes.EV_KEY:
-      logger.trace(
-        "is KEY event",
-      )
-      if event.code == evdev.ecodes.KEY_LEFTSHIFT and event.value == 1:
-        logger.info("Cancel trigger detected (Left Shift Down)")
-        return  # Trigger detected, exit the await
+  # Should not be reached in normal operation, but added to satisfy type checker
+  return "none"
