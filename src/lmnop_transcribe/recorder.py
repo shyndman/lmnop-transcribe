@@ -1,5 +1,6 @@
 import asyncio
 import os
+import shlex  # Import shlex for proper escaping
 import subprocess
 import time
 from multiprocessing.synchronize import Event
@@ -174,38 +175,35 @@ async def transcribe_recorded_audio(config: Config, dbus: DbusService) -> str | 
 
 
 async def paste_transcribed_text(transcribed_text: str, dbus: DbusService):
-  """Pastes the transcribed text to the clipboard."""
+  """Types the transcribed text using ydotool."""
   if transcribed_text:
     logger.bind(transcribed_text=transcribed_text).info(
       'Transcribed text available, "{text}"', text=transcribed_text
     )
 
-    # Ensure wl-copy is only called when transcribed_text is not None
-    # Define the lambda inside the check to help type checker
-    def clipboard_paste_command():
-      text = cast(str, transcribed_text)
-      subprocess.run(["wl-copy", text], check=True)
-      subprocess.run(["wl-paste"], check=True)
+    # Use shlex.quote to properly escape the string for the shell command
+    escaped_text = shlex.quote(transcribed_text)
 
     try:
-      logger.debug("Attempting to paste text using wl-paste...")
+      logger.debug("Attempting to type text using ydotool...")
       start_time = time.time()
-      loop = asyncio.get_event_loop()
-      await loop.run_in_executor(None, clipboard_paste_command)
+      # Use ydotool type to simulate typing the transcribed text
+      # shlex.quote adds the necessary single quotes and escapes internal ones
+      subprocess.run(["ydotool", "type", "--key-delay", "5", "--key-hold", "5", escaped_text], check=True)
       end_time = time.time()
       logger.info(
-        "Text inserted at cursor using wl-paste in {elapsed:2f} seconds.", elapsed=(end_time - start_time)
+        "Text typed at cursor using ydotool in {elapsed:2f} seconds.", elapsed=(end_time - start_time)
       )
     except FileNotFoundError:
-      logger.error("Error: 'wl-paste' command not found. Please ensure it's installed and in your PATH.")
+      logger.error("Error: 'ydotool' command not found. Please ensure it's installed and in your PATH.")
       # Emit ErrorOccurred signal
-      error_message = "Error: 'wl-paste' command not found. Please ensure it's installed and in your PATH."
+      error_message = "Error: 'ydotool' command not found. Please ensure it's installed and in your PATH."
       dbus.ErrorOccurred.emit(error_message)
       logger.error(f"Emitted D-Bus signal: ErrorOccurred - {error_message}")
     except subprocess.CalledProcessError as e:
-      logger.error(f"Error executing wl-paste: {e}")
+      logger.error(f"Error executing ydotool: {e}")
       # Emit ErrorOccurred signal
-      error_message = f"Error executing wl-paste: {e}"
+      error_message = f"Error executing ydotool: {e}"
       dbus.ErrorOccurred.emit(error_message)
       logger.error(f"Emitted D-Bus signal: ErrorOccurred - {error_message}")
   else:
