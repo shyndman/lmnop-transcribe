@@ -18,6 +18,7 @@ Recording cancellation feature implemented and refactored.
 -   Added timing measurements for external calls (SoX, transcription, clipboard paste) in `src/lmnop_transcribe/recorder.py`.
 -   Removed all references to the start sound from `config.toml`, `src/lmnop_transcribe/user_feedback.py`, and `src/lmnop_transcribe/config.py`.
 -   Implemented recording cancellation feature: Added `wait_for_cancel_trigger` to `trigger_handler.py` and modified `recorder.py` to use `asyncio.wait` for a race between stop and cancel triggers. Refactored `run_recording_cycle` to use `handle_stop` and `handle_cancel` functions.
+-   **Replaced Clipboard Paste with ydotool:** Replaced the `wl-copy` and `wl-paste` subprocess calls in `src/lmnop_transcribe/recorder.py` with a call to `ydotool type` for typing the transcribed text. Used `shlex.quote()` for proper escaping of the text.
 
 ## Active Decisions and Considerations
 

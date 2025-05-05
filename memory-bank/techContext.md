@@ -10,6 +10,7 @@
 -   **loguru:** Used for logging.
 -   **toml:** Used for reading the configuration file (`config.toml`).
 -   **multiprocessing:** (Planned) Will be used to run audio recording in a separate process.
+-   **ydotool:** Used for typing the transcribed text.
 -   **Wyoming Protocol:** Used for communication with the Speech-to-Text server.
 -   **uv:** Used for dependency management and packaging.
 

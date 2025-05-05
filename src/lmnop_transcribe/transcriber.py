@@ -21,6 +21,13 @@ def transcribe_audio_with_wyoming(audio_file, wyoming_server_address):
         num_channels = wf.getnchannels()
         io = s.makefile("wb")
 
+        logger.debug(
+          "{frame_rate}, {sample_width}, {num_channels}",
+          frame_rate=frame_rate,
+          sample_width=sample_width,
+          num_channels=num_channels,
+        )
+
         # Send transcribe event
         write_event(Transcribe().event(), io)
         write_event(AudioStart(rate=frame_rate, width=sample_width, channels=num_channels).event(), io)

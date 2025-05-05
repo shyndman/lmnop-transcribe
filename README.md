@@ -33,6 +33,7 @@ To install lmnop:transcribe, follow these steps:
     ```bash
     uv sync --all-extras --all-groups
     ```
+6.  **Install ydotool and ydotoold:** LMNOP Transcribe uses `ydotool` to type the transcribed text. Ensure `ydotool` and its daemon `ydotoold` are installed and the daemon is running as a system service. Refer to the [ydotool GitHub repository](https://github.com/ReimuNotMoe/ydotool) for installation instructions.
 
 ## Usage
 

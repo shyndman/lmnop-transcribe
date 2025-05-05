@@ -21,5 +21,6 @@ To address the event processing delays, the plan is to refactor the application 
 -   **Main Process:** Will continue to handle trigger detection using `evdev` in its asyncio event loop. It will manage the lifecycle of the audio recording process.
 -   **Audio Recording Process:** A separate process will be spawned to handle all audio capture, processing, and file writing using `sounddevice` and `soundfile`.
 -   **Inter-Process Communication (IPC):** A `multiprocessing.Event` will be used by the main process to signal the audio recording process to start and stop. The audio process will monitor this event.
+-   **Transcription Output:** Transcribed text is now typed directly using `ydotool` instead of being pasted via the clipboard.
 
 This multiprocessing approach aims to isolate the potentially blocking or resource-intensive audio operations from the main process's event loop, ensuring that trigger events are processed promptly.
