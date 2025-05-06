@@ -1,4 +1,3 @@
-import multiprocessing
 import queue
 import socket
 
@@ -9,7 +8,7 @@ from wyoming.event import read_event, write_event
 
 
 def transcribe_audio_with_wyoming(
-  audio_queue: multiprocessing.Queue,
+  audio_queue: queue.Queue[bytes | None],
   wyoming_server_address: str,
   rate: int,
   sample_width: int,

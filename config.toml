@@ -17,7 +17,7 @@ block_size = 8192
 min_recording_duration_ms = 750
 
 # The duration to trim from the beginning of the recording in seconds.
-trim_duration_seconds = 0.5
+trim_duration_seconds = 0.35
 
 # The name of the xkeyboard device to use. Defaults to the system default.
 keyboard_device_name = "default"
