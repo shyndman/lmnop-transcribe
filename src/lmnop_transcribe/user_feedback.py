@@ -17,19 +17,3 @@ async def send_notification(message):  # Make async
       logger.error("notify-send is not installed. Please install it to use desktop notifications.")
     except subprocess.CalledProcessError as e:
       logger.error(f"Error sending notification: {e}")
-
-
-async def play_sound(role):
-  """Play a sound effect."""
-  filename = None
-  if role == "stop":
-    filename = Config().feedback_sound_stop
-
-  if filename:
-    loop = asyncio.get_event_loop()
-    try:
-      await loop.run_in_executor(
-        None, lambda: subprocess.run(["pw-play", "--volume", "0.6", filename], check=True)
-      )
-    except subprocess.CalledProcessError:
-      logger.exception("Error playing sound with pw-play")

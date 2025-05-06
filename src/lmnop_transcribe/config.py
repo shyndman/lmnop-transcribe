@@ -38,7 +38,6 @@ class Config:
     self._start_trigger_param = config.get("trigger", {}).get("start_trigger_param", "")
     self._stop_trigger_type = config.get("trigger", {}).get("stop_trigger_type", "caps_lock")
     self._stop_trigger_param = config.get("trigger", {}).get("stop_trigger_param", "")
-    self._feedback_sound_stop = config.get("feedback_sound_stop", "")
     self._use_desktop_notifications = config.get("use_desktop_notifications", True)
     self._whisper_model_name = config.get("whisper_model_name", "small")
     self._audio_sample_rate = config.get("audio_sample_rate", 16000)
@@ -108,11 +107,6 @@ class Config:
   def stop_trigger_param(self) -> str:
     """Returns the parameter for the stop recording trigger (e.g., key code)."""
     return self._stop_trigger_param
-
-  @property
-  def feedback_sound_stop(self) -> str:
-    """Returns the path to the sound to play when recording stops."""
-    return self._feedback_sound_stop
 
   @property
   def use_desktop_notifications(self) -> bool:
