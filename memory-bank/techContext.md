@@ -6,10 +6,11 @@
 -   **asyncio:** Used for asynchronous programming and managing the event loop in the main process.
 -   **python-evdev:** Used for reading input events from devices like the keyboard.
 -   **python-sounddevice:** Used for capturing audio input.
--   **soundfile:** Used for reading and writing audio files (e.g., WAV).
+-   **soundfile:** Used for handling audio file formats (implicitly by sounddevice or for potential future use).
 -   **loguru:** Used for logging.
 -   **toml:** Used for reading the configuration file (`config.toml`).
--   **multiprocessing:** (Planned) Will be used to run audio recording in a separate process.
+-   **multiprocessing:** Used to run audio recording and processing in a separate process.
+-   **numpy:** Used for handling audio data arrays.
 -   **ydotool:** Used for typing the transcribed text.
 -   **Wyoming Protocol:** Used for communication with the Speech-to-Text server.
 -   **uv:** Used for dependency management and packaging.

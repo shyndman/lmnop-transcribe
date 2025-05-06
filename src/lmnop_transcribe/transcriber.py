@@ -1,5 +1,6 @@
+import multiprocessing
+import queue
 import socket
-import wave
 
 from loguru import logger
 from wyoming.asr import Transcribe, Transcript
@@ -7,51 +8,63 @@ from wyoming.audio import AudioChunk, AudioStart, AudioStop
 from wyoming.event import read_event, write_event
 
 
-def transcribe_audio_with_wyoming(audio_file, wyoming_server_address):
-  """Transcribes the audio file using Wyoming ASR via raw TCP socket."""
+def transcribe_audio_with_wyoming(
+  audio_queue: multiprocessing.Queue,
+  wyoming_server_address: str,
+  rate: int,
+  sample_width: int,
+  channels: int,
+):
+  """Transcribes audio chunks from a queue using Wyoming ASR via raw TCP socket."""
 
   try:
     host, port = wyoming_server_address.split(":")
     port = int(port)
 
     with socket.create_connection((host, port)) as s:
-      with wave.open(audio_file, "rb") as wf:
-        frame_rate = wf.getframerate()
-        sample_width = wf.getsampwidth()
-        num_channels = wf.getnchannels()
-        io = s.makefile("wb")
+      io = s.makefile("wb")
 
-        # Send transcribe event
-        write_event(Transcribe().event(), io)
-        write_event(AudioStart(rate=frame_rate, width=sample_width, channels=num_channels).event(), io)
+      # Send transcribe event
+      write_event(Transcribe().event(), io)
+      write_event(AudioStart(rate=rate, width=sample_width, channels=channels).event(), io)
+      logger.debug("Sent AudioStart event to Wyoming server.")
 
-        while True:
-          # audio_data =   # Adjust chunk size as needed
-          if audio_data := wf.readframes(1024):
-            write_event(
-              AudioChunk(
-                rate=frame_rate, width=sample_width, channels=num_channels, audio=audio_data
-              ).event(),
-              io,
-            )
-          else:
+      while True:
+        try:
+          audio_chunk = audio_queue.get(timeout=0.1)
+          if audio_chunk is None:
             break
 
-        # Send audio stop
-        write_event(AudioStop().event(), io)
+          write_event(
+            AudioChunk(rate=rate, width=sample_width, channels=channels, audio=audio_chunk).event(),
+            io,
+          )
+          logger.debug(f"Sent audio chunk ({len(audio_chunk)} bytes) to Wyoming server.")
 
-        # Receive transcript
-        transcript_event = read_event(s.makefile("rb"))
-        if transcript_event and Transcript.is_type(transcript_event.type):
-          transcript = Transcript.from_event(transcript_event)
-          transcribed_text = transcript.text.strip()
-          return transcribed_text
-        else:
-          logger.warning(f"Unexpected event: {transcript_event}")
-          return None
+        except queue.Empty:
+          # This assumes the audio recording process will put None when finished
+          # Or the main process will close the queue
+          # For now, we'll rely on a None signal or the main process joining the audio process
+          pass
+
+      # Send audio stop
+      write_event(AudioStop().event(), io)
+      logger.debug("Sent AudioStop event to Wyoming server.")
+
+      # Receive transcript
+      transcript_event = read_event(s.makefile("rb"))
+      if transcript_event and Transcript.is_type(transcript_event.type):
+        transcript = Transcript.from_event(transcript_event)
+        transcribed_text = transcript.text.strip()
+        logger.info(f"Received transcript: {transcribed_text}")
+        return transcribed_text
+      else:
+        logger.warning(f"Unexpected event from Wyoming server: {transcript_event}")
+        return None
 
   except ConnectionRefusedError as e:
-    logger.error(f"Error connecting to Wyoming ASR server: {e}")
+    logger.error(f"Error connecting to Wyoming ASR server at {wyoming_server_address}: {e}")
     return None
   except Exception as e:
-    logger.exception(f"Error transcribing audio: {e}")
+    logger.exception(f"Error transcribing audio with Wyoming: {e}")
+    return None

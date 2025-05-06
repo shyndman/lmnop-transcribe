@@ -7,30 +7,32 @@
 -   Included stopping the service in the installation script for idempotency.
 -   Basic application structure with trigger handling and audio recording components.
 -   Start trigger detection using Caps Lock press.
--   Audio recording and saving to a WAV file.
--   Stop trigger event is now responsive during audio recording.
--   Non-blocking file writing using `loop.run_in_executor` has been implemented.
--   The post-recording processing (cleanup, transcription, pasting) is correctly integrated into the main application loop in `recorder.py`.
--   `aiodebug` has been installed and integrated into `__main__.py` for performance monitoring.
--   The Pylance error related to the `clippaste` subprocess call in `recorder.py` has been addressed.
--   Added logging for time elapsed during audio recording.
--   Added timing measurements for external calls (SoX, transcription, clipboard paste).
--   Implemented multiprocessing for audio handling to resolve trigger responsiveness issues.
+-   Stop trigger event is now responsive during audio recording due to multiprocessing.
+-   Implemented multiprocessing for audio handling.
+-   Implemented the streaming audio pipeline using `multiprocessing.Queue` for inter-process communication.
+-   Implemented manual trimming of a configurable duration from the beginning of the audio stream in the audio recording process.
+-   Adapted the transcriber to receive audio chunks from a queue and stream to the Wyoming server.
+-   Removed SoX dependencies and related code/configuration.
 -   Completed integration with the Wyoming server for Speech-to-Text (STT).
 -   Completed the transcription functionality.
 -   Completed user feedback mechanisms.
+-   Added configurable trim duration to `config.toml`.
+-   Corrected type hinting for multiprocessing queues in `recorder.py`.
 
 ## What's Left to Build
 
-Nothing is left to build.
+- Implement automatic recording cancellation based on duration threshold (re-evaluate how this fits with the streaming approach).
+- Add user feedback for cancelled recordings.
+- Refine error handling and edge case management in the streaming pipeline (e.g., what happens if the Wyoming server disconnects mid-stream).
+- Re-evaluate the minimum recording duration check and decide where it should be implemented in the new pipeline.
 
 ## Current Status
 
-Core features are implemented, deployment files for a user systemd service have been created, and D-Bus signaling has been implemented.
+The core streaming audio pipeline with manual trimming is implemented. Deployment files for a user systemd service have been created, and D-Bus signaling has been implemented.
 
 ## Known Issues
 
-None
+-   Pylance errors in `multiprocessing/queues.py` related to static analysis of multiprocessing queues (likely not runtime bugs in project code).
 
 ## Evolution of Project Decisions
 
@@ -49,3 +51,8 @@ None
 -   Completed integration with the Wyoming server for Speech-to-Text (STT).
 -   Completed the transcription functionality.
 -   Completed user feedback mechanisms.
+-   Decision to move from file-based audio processing to a streaming pipeline using `multiprocessing.Queue`.
+-   Decision to perform manual trimming of initial audio bytes instead of using SoX/pysox.
+-   Challenges encountered with using `replace_in_file` for complex code modifications, requiring fallback to `write_to_file`.
+-   Refinement of type hinting for multiprocessing queues based on static analysis feedback.
+-   Decision to remove "dumb comments" to improve code clarity and adhere to styling rules.

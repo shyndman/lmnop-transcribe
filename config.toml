@@ -13,13 +13,11 @@ log_level = "DEBUG"
 filename = "output.wav"
 # The block size to use when recording audio.
 block_size = 8192
+# The minimum duration of a recording in milliseconds to be processed.
+min_recording_duration_ms = 750
 
-# Whether to use sox to detect silence.
-use_sox_silence = false
-# The amount of silence to trim from the beginning and end of the recording, in milliseconds.
-trim_ms = 50
-# The command to run to clean up the audio after recording.
-audio_cleanup_command = ""
+# The duration to trim from the beginning of the recording in seconds.
+trim_duration_seconds = 0.5
 
 # The name of the xkeyboard device to use. Defaults to the system default.
 keyboard_device_name = "default"

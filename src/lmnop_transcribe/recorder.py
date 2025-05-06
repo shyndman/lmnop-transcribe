@@ -1,24 +1,27 @@
+from __future__ import annotations
+
 import asyncio
+import multiprocessing
 import os
-import shlex  # Import shlex for proper escaping
+import queue
+import shlex
 import subprocess
 import time
 from multiprocessing.synchronize import Event
-from typing import Optional, cast
+from typing import cast
 
-import aiomultiprocess  # Import aiomultiprocess
+import aiomultiprocess
 from loguru import logger
 
-from .audio_processor import cleanup_audio
-from .audio_recorder import audio_recording_process  # Import the new multiprocessing function
-from .config import Config  # Import Config to pass necessary values to the process
-from .dbus_service import DbusService  # Import D-Bus interface class
+from .audio_recorder import audio_recording_process
+from .config import Config
+from .dbus_service import DbusService
 from .transcriber import transcribe_audio_with_wyoming
-from .trigger_handler import (  # Import async trigger functions
+from .trigger_handler import (
   wait_for_start_trigger,
   wait_for_stop_or_cancel_trigger,
 )
-from .user_feedback import play_sound, send_notification  # These are now async functions
+from .user_feedback import play_sound, send_notification
 
 
 async def record(keyboard_device, config: Config, dbus: DbusService):
@@ -27,7 +30,7 @@ async def record(keyboard_device, config: Config, dbus: DbusService):
   """
   logger.info("Ready to start recording. Awaiting trigger, pid={pid}", pid=os.getpid())
 
-  while True:  # Main loop to wait for triggers
+  while True:
     await run_recording_cycle(keyboard_device, config, dbus)
 
 
@@ -35,48 +38,43 @@ async def run_recording_cycle(keyboard_device, config: Config, dbus: DbusService
   """
   Runs a single audio recording and processing cycle.
   """
-  audio_process = None  # Initialize audio process to None
-  stop_event = None  # Initialize stop event to None
-
   # Wait for the start trigger
   await wait_for_start_trigger(keyboard_device, config)
 
-  # Create a multiprocessing Event to signal the process to stop
   logger.info("Starting recording process using aiomultiprocess...")
-  stop_event = cast(Event, aiomultiprocess.core.get_manager().Event())
+  manager = aiomultiprocess.core.get_manager()
+  stop_event = cast(Event, manager.Event())
+  audio_queue: queue.Queue[bytes] = manager.Queue()
 
-  # Create an aiomultiprocess Process targeting the audio recording function
-  # Pass necessary config values and the stop_event to the process
   audio_process = aiomultiprocess.Process(
     target=audio_recording_process,
     args=(
       config.audio_device_name,
       config.sample_rate,
-      config.filename,
       config.channels,
       config.block_size,
       stop_event,
+      audio_queue,
     ),
   )
-  # Start the audio recording process asynchronously
   audio_process.start()
   logger.info("Audio recording process started.")
 
   if config.use_desktop_notifications:
-    await send_notification("Recording started...")  # Await the async function
-  _ignore = play_sound("start")  # Await the async function
+    await send_notification("Recording started...")
+  _ignore = play_sound("start")
 
   # Wait for either the stop or cancel trigger
   trigger_type = await wait_for_stop_or_cancel_trigger(keyboard_device, config)
 
   if trigger_type == "stop":
-    await handle_stop(audio_process, stop_event, config, dbus)
+    await handle_stop(audio_process, stop_event, audio_queue, config, dbus)  # Pass audio_queue
 
     # Loop back to wait for the next start trigger
     logger.info("Ready to start recording. Awaiting trigger...")
 
   elif trigger_type == "cancel":
-    await handle_cancel(audio_process, stop_event, config, dbus)
+    await handle_cancel(audio_process, stop_event, audio_queue, config, dbus)  # Pass audio_queue
     # Return from this function to go back to the main loop in record
     return
 
@@ -84,6 +82,7 @@ async def run_recording_cycle(keyboard_device, config: Config, dbus: DbusService
 async def handle_stop(
   audio_process: aiomultiprocess.Process | None,
   stop_event: Event | None,
+  audio_queue: queue.Queue[bytes],
   config: Config,
   dbus: DbusService,
 ):
@@ -91,83 +90,92 @@ async def handle_stop(
   logger.info("Stop trigger received.")
 
   logger.info("Stopping recording process...")
-  # Set the stop event to signal the audio process to stop
   if stop_event:
     stop_event.set()
-  # Wait for the audio process to finish asynchronously
   if audio_process and audio_process.is_alive():
     await audio_process.join()
     logger.info("Audio recording process joined.")
-  audio_process = None  # Reset audio process
-  stop_event = None  # Reset stop event
+
+  # Signal the end of the audio stream to the transcriber
+  if audio_queue:
+    audio_queue.put(None)
+    logger.debug("Sent None signal to audio queue.")
+
+  audio_process = None
+  stop_event = None
 
   if config.use_desktop_notifications:
-    await send_notification("Recording stopped.")  # Await the async function
-  _nowait = play_sound("stop")  # Await the async function
+    await send_notification("Recording stopped.")
+  _nowait = play_sound("stop")
 
-  # --- Start of moved logic ---
+  # The minimum duration check is now handled by the audio recording process
+  # or can be implemented based on the amount of data received from the queue
+  # For now, we proceed directly to transcription.
+
   logger.info("Processing recorded audio...")
-  await process_audio_file(config, dbus)
-  transcribed_text = await transcribe_recorded_audio(config, dbus)
+  # Assuming 16-bit audio, sample width is 2 bytes
+  sample_width = 2
+  transcribed_text = await transcribe_recorded_audio(
+    audio_queue,
+    config.wyoming_server_address,
+    config.sample_rate,
+    sample_width,
+    config.channels,
+    dbus,
+  )
   if transcribed_text is not None:
     await paste_transcribed_text(transcribed_text, dbus)
-  # --- End of moved logic ---
 
 
 async def handle_cancel(
-  audio_process: Optional[aiomultiprocess.Process],
-  stop_event: Optional[Event],
+  audio_process: aiomultiprocess.Process | None,
+  stop_event: Event | None,
+  audio_queue: queue.Queue[bytes],
   config: Config,
   dbus: DbusService,
 ):
   """Handles the cancel recording trigger."""
-  logger.info("Cancel trigger received. Stopping recording and removing file.")
+  logger.info("Cancel trigger received. Stopping recording.")
 
-  # Set the stop event to signal the audio process to stop
   if stop_event:
     stop_event.set()
-  # Wait for the audio process to finish asynchronously
   if audio_process and audio_process.is_alive():
     await audio_process.join()
     logger.info("Audio recording process joined.")
-  audio_process = None  # Reset audio process
-  stop_event = None  # Reset stop event
 
-  # Remove the recorded file
-  if os.path.exists(config.filename):
-    os.remove(config.filename)
-    logger.info(f"Removed cancelled recording file: {config.filename}")
+  # Signal the end of the audio stream to the transcriber
+  if audio_queue:
+    audio_queue.put(None)
+    logger.debug("Sent None signal to audio queue.")
+
+  audio_process = None
+  stop_event = None
 
   if config.use_desktop_notifications:
-    await send_notification("Recording cancelled.")  # Await the async function
-  _nowait = play_sound("stop")  # Await the async function
+    await send_notification("Recording cancelled.")
+  _nowait = play_sound("stop")
 
 
-async def process_audio_file(config: Config, dbus: DbusService):
-  """Applies SoX silence removal to the recorded audio file."""
-  if config.use_sox_silence:
-    logger.info("Applying SoX silence removal to {filename}", filename=config.filename)
-    start_time = time.time()
-    try:
-      loop = asyncio.get_event_loop()
-      await loop.run_in_executor(None, cleanup_audio, config.filename)
-      end_time = time.time()
-      logger.debug("SoX silence removal completed in {elapsed:2f} seconds.", elapsed=(end_time - start_time))
-    except Exception as e:
-      logger.error(f"Error during audio cleanup: {e}")
-      # Emit ErrorOccurred signal
-      error_message = f"Error during audio cleanup: {e}"
-      dbus.ErrorOccurred.emit(error_message)
-      logger.error(f"Emitted D-Bus signal: ErrorOccurred - {error_message}")
-
-
-async def transcribe_recorded_audio(config: Config, dbus: DbusService) -> str | None:
-  """Transcribes the recorded audio file using the Wyoming server."""
-  logger.debug(f"Starting transcription for {config.filename}")
+async def transcribe_recorded_audio(
+  audio_queue: multiprocessing.Queue,
+  wyoming_server_address: str,
+  rate: int,
+  sample_width: int,
+  channels: int,
+  dbus: DbusService,
+) -> str | None:
+  """Transcribes audio chunks from a queue using the Wyoming server."""
+  logger.debug("Starting transcription from audio queue.")
   start_time = time.time()
   loop = asyncio.get_event_loop()
   transcribed_text = await loop.run_in_executor(
-    None, transcribe_audio_with_wyoming, config.filename, config.wyoming_server_address
+    None,
+    transcribe_audio_with_wyoming,
+    audio_queue,
+    wyoming_server_address,
+    rate,
+    sample_width,
+    channels,
   )
   end_time = time.time()
   logger.debug("Transcription completed in {elapsed:2f} seconds.", elapsed=(end_time - start_time))
@@ -181,30 +189,22 @@ async def paste_transcribed_text(transcribed_text: str, dbus: DbusService):
       'Transcribed text available, "{text}"', text=transcribed_text
     )
 
-    # Use shlex.quote to properly escape the string for the shell command
     escaped_text = shlex.quote(transcribed_text)
 
     try:
       logger.debug("Attempting to type text using ydotool...")
       start_time = time.time()
-      # Use ydotool type to simulate typing the transcribed text
-      # shlex.quote adds the necessary single quotes and escapes internal ones
-      subprocess.run(["ydotool", "type", "--key-delay", "5", "--key-hold", "5", escaped_text], check=True)
-      end_time = time.time()
-      logger.info(
-        "Text typed at cursor using ydotool in {elapsed:2f} seconds.", elapsed=(end_time - start_time)
-      )
+      subprocess.run(["ydotool", "type", "--key-delay", "3", "--key-hold", "3", escaped_text], check=True)
+      elapsed = time.time() - start_time
+
+      logger.info("Text typed at cursor using ydotool in {elapsed:2f} seconds.", elapsed=elapsed)
     except FileNotFoundError:
-      logger.error("Error: 'ydotool' command not found. Please ensure it's installed and in your PATH.")
-      # Emit ErrorOccurred signal
       error_message = "Error: 'ydotool' command not found. Please ensure it's installed and in your PATH."
+      logger.exception(error_message)
       dbus.ErrorOccurred.emit(error_message)
-      logger.error(f"Emitted D-Bus signal: ErrorOccurred - {error_message}")
-    except subprocess.CalledProcessError as e:
-      logger.error(f"Error executing ydotool: {e}")
-      # Emit ErrorOccurred signal
-      error_message = f"Error executing ydotool: {e}"
+    except subprocess.CalledProcessError:
+      error_message = "Error executing ydotool"
+      logger.exception(error_message)
       dbus.ErrorOccurred.emit(error_message)
-      logger.error(f"Emitted D-Bus signal: ErrorOccurred - {error_message}")
   else:
     logger.warning("Transcription failed or produced no text.")

@@ -31,9 +31,8 @@ class Config:
     self._wyoming_server_address = config.get("wyoming_server_address", "localhost:8080")
     self._filename = config.get("filename", "output.wav")
     self._block_size = config.get("block_size", 4096)
-    self._use_sox_silence = config.get("use_sox_silence", False)
-    self._trim_ms = config.get("trim_ms", 50)
-    self._audio_cleanup_command = config.get("audio_cleanup_command", "")
+    self._min_recording_duration_ms = config.get("min_recording_duration_ms", 750)
+    self._trim_duration_seconds = config.get("trim_duration_seconds", 0.5)
     self._keyboard_device_name = config.get("keyboard_device_name", "")
     self._start_trigger_type = config.get("trigger", {}).get("start_trigger_type", "caps_lock")
     self._start_trigger_param = config.get("trigger", {}).get("start_trigger_param", "")
@@ -76,19 +75,14 @@ class Config:
     return self._block_size
 
   @property
-  def use_sox_silence(self) -> bool:
-    """Returns whether to use sox to detect silence."""
-    return self._use_sox_silence
+  def min_recording_duration_ms(self) -> int:
+    """Returns the minimum recording duration in milliseconds."""
+    return self._min_recording_duration_ms
 
   @property
-  def trim_ms(self) -> int:
-    """Returns the amount of silence to trim from the beginning and end of the recording, in milliseconds."""
-    return self._trim_ms
-
-  @property
-  def audio_cleanup_command(self) -> str:
-    """Returns the command to run to clean up the audio after recording."""
-    return self._audio_cleanup_command
+  def trim_duration_seconds(self) -> float:
+    """Returns the duration to trim from the beginning of the recording in seconds."""
+    return self._trim_duration_seconds
 
   @property
   def keyboard_device_name(self) -> str:
