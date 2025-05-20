@@ -12,5 +12,7 @@
   "python.analysis.userFileIndexingLimit": 4000,
   "python.languageServer": "Pylance",
   "python.testing.pytestEnabled": true,
-  "ruff.lineLength": 110
+  "ruff.lineLength": 110,
+  "python-envs.defaultEnvManager": "ms-python.python:venv",
+  "python-envs.pythonProjects": []
 }
