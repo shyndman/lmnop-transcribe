@@ -1,39 +1,40 @@
 [project]
 name = "lmnop-transcribe"
-version = "0.0.0"
-description = "…"
+version = "0.1.0"
+description = "Add your description here"
 readme = "README.md"
 authors = [{name = "Scott Hyndman", email = "scotty.hyndman@gmail.com"}]
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = [
-    "aiodebug>=2.3.0",
-    "aiomultiprocess>=0.9.1",
     "evdev>=1.9.2",
     "loguru>=0.7.3",
-    "numpy>=2.2.5",
-    "sdbus>=0.14.0",
-    "sounddevice>=0.5.1",
+    "matplotlib>=3.10.3",
+    "numpy>=2.2.6",
+    "reactivex>=4.0.4",
+    "sounddevice>=0.5.2",
     "soundfile>=0.13.1",
-    "toml>=0.10.2",
-    "wyoming>=1.6.0",
+    "wyoming>=1.6.1",
 ]
-license = {text = "MIT"}
-
-[project.urls]
-repository = "https://github.com/shyndman/lmnop_transcribe"
-"Bug Tracker" = "https://github.com/shyndman/lmnop_transcribe/issues"
 
 [project.scripts]
-lmnop-transcribe = "lmnop_transcribe.__main__:main"
+transcribe = "lmnop_transcribe.pipeline:main"
+mic = "lmnop_transcribe.audio_source:main"
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pdm.build]
+source-includes = ["tests/"]
 
 [dependency-groups]
 dev = [
     "pytest>=8.3.5",
+    "pytest-asyncio>=0.26.0",
 ]
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "session"
 
 [tool.pyright]
 include = ["src"]

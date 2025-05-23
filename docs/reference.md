@@ -1,0 +1,371 @@
+<!-- https://rxpy.readthedocs.io/en/latest/reference.html -->
+<!-- 3364 -->
+This document serves as a reference index for the `reactivex` library, version 4.0.4, outlining its core components and their available functions and methods. It does not provide detailed descriptions, parameters, return values, or code examples for each listed API element.
+
+### Observable Factory
+
+This section lists functions and classes used for creating and transforming Observables.
+
+*   `amb()`
+*   `case()`
+*   `catch()`
+*   `catch_with_iterable()`
+*   `create()`
+*   `combine_latest()`
+*   `compose()`
+*   `concat()`
+*   `concat_with_iterable()`
+*   `ConnectableObservable`
+    *   `ConnectableObservable.__init__()`
+    *   `ConnectableObservable.connect()`
+    *   `ConnectableObservable.auto_connect()`
+*   `defer()`
+*   `empty()`
+*   `fork_join()`
+*   `from_callable()`
+*   `from_callback()`
+*   `from_future()`
+*   `from_iterable()`
+*   `GroupedObservable`
+    *   `GroupedObservable.__init__()`
+*   `never()`
+*   `Notification`
+    *   `Notification.__init__()`
+    *   `Notification.accept()`
+    *   `Notification.to_observable()`
+    *   `Notification.equals()`
+    *   `Notification.__eq__()`
+    *   `Notification.__hash__`
+*   `on_error_resume_next()`
+*   `of()`
+*   `Observable`
+    *   `Observable.__init__()`
+    *   `Observable.subscribe()`
+    *   `Observable.pipe()`
+    *   `Observable.run()`
+    *   `Observable.__await__()`
+    *   `Observable.__add__()`
+    *   `Observable.__iadd__()`
+    *   `Observable.__getitem__()`
+*   `Observer`
+    *   `Observer.__init__()`
+    *   `Observer.on_next()`
+    *   `Observer.on_error()`
+    *   `Observer.on_completed()`
+    *   `Observer.dispose()`
+    *   `Observer.to_notifier()`
+    *   `Observer.as_observer()`
+*   `return_value()`
+*   `pipe()`
+*   `range()`
+*   `repeat_value()`
+*   `Subject`
+    *   `Subject.__init__()`
+    *   `Subject.on_next()`
+    *   `Subject.on_error()`
+    *   `Subject.on_completed()`
+    *   `Subject.dispose()`
+*   `start()`
+*   `start_async()`
+*   `throw()`
+*   `timer()`
+*   `to_async()`
+*   `using()`
+*   `with_latest_from()`
+*   `zip()`
+
+### Observable
+
+This section refers to the `Observable` class and its methods.
+
+*   `Observable`
+    *   `Observable.__init__()`
+    *   `Observable.subscribe()`
+    *   `Observable.pipe()`
+    *   `Observable.run()`
+    *   `Observable.__await__()`
+    *   `Observable.__add__()`
+    *   `Observable.__iadd__()`
+    *   `Observable.__getitem__()`
+
+### Subject
+
+This section details various `Subject` types, which are both Observables and Observers.
+
+*   `Subject`
+    *   `Subject.__init__()`
+    *   `Subject.on_next()`
+    *   `Subject.on_error()`
+    *   `Subject.on_completed()`
+    *   `Subject.dispose()`
+*   `BehaviorSubject`
+    *   `BehaviorSubject.__init__()`
+    *   `BehaviorSubject.dispose()`
+*   `ReplaySubject`
+    *   `ReplaySubject.__init__()`
+    *   `ReplaySubject.dispose()`
+*   `AsyncSubject`
+    *   `AsyncSubject.__init__()`
+    *   `AsyncSubject.dispose()`
+
+### Scheduler
+
+This section lists various schedulers used for controlling the timing and concurrency of Observable sequences.
+
+*   `CatchScheduler`
+    *   `CatchScheduler.__init__()`
+    *   `CatchScheduler.now`
+    *   `CatchScheduler.schedule()`
+    *   `CatchScheduler.schedule_relative()`
+    *   `CatchScheduler.schedule_absolute()`
+    *   `CatchScheduler.schedule_periodic()`
+*   `CurrentThreadScheduler`
+    *   `CurrentThreadScheduler.singleton()`
+    *   `CurrentThreadScheduler.__init__()`
+*   `EventLoopScheduler`
+    *   `EventLoopScheduler.__init__()`
+    *   `EventLoopScheduler.schedule()`
+    *   `EventLoopScheduler.schedule_relative()`
+    *   `EventLoopScheduler.schedule_absolute()`
+    *   `EventLoopScheduler.schedule_periodic()`
+    *   `EventLoopScheduler.run()`
+    *   `EventLoopScheduler.dispose()`
+*   `HistoricalScheduler`
+    *   `HistoricalScheduler.__init__()`
+*   `ImmediateScheduler`
+    *   `ImmediateScheduler.__new__()`
+    *   `ImmediateScheduler.schedule()`
+    *   `ImmediateScheduler.schedule_relative()`
+    *   `ImmediateScheduler.schedule_absolute()`
+*   `NewThreadScheduler`
+    *   `NewThreadScheduler.__init__()`
+    *   `NewThreadScheduler.schedule()`
+    *   `NewThreadScheduler.schedule_relative()`
+    *   `NewThreadScheduler.schedule_absolute()`
+    *   `NewThreadScheduler.schedule_periodic()`
+*   `ThreadPoolScheduler`
+    *   `ThreadPoolScheduler.ThreadPoolThread`
+        *   `ThreadPoolScheduler.ThreadPoolThread.__init__()`
+    *   `ThreadPoolScheduler.__init__()`
+*   `TimeoutScheduler`
+    *   `TimeoutScheduler.__new__()`
+    *   `TimeoutScheduler.schedule()`
+    *   `TimeoutScheduler.schedule_relative()`
+    *   `TimeoutScheduler.schedule_absolute()`
+*   `TrampolineScheduler`
+    *   `TrampolineScheduler.__init__()`
+    *   `TrampolineScheduler.schedule()`
+    *   `TrampolineScheduler.schedule_relative()`
+    *   `TrampolineScheduler.schedule_absolute()`
+    *   `TrampolineScheduler.schedule_required()`
+    *   `TrampolineScheduler.ensure_trampoline()`
+*   `VirtualTimeScheduler`
+    *   `VirtualTimeScheduler.__init__()`
+    *   `VirtualTimeScheduler.now`
+    *   `VirtualTimeScheduler.schedule()`
+    *   `VirtualTimeScheduler.schedule_relative()`
+    *   `VirtualTimeScheduler.schedule_absolute()`
+    *   `VirtualTimeScheduler.start()`
+    *   `VirtualTimeScheduler.stop()`
+    *   `VirtualTimeScheduler.advance_to()`
+    *   `VirtualTimeScheduler.advance_by()`
+    *   `VirtualTimeScheduler.sleep()`
+    *   `VirtualTimeScheduler.add()`
+*   `AsyncIOScheduler`
+    *   `AsyncIOScheduler.__init__()`
+    *   `AsyncIOScheduler.schedule()`
+    *   `AsyncIOScheduler.schedule_relative()`
+    *   `AsyncIOScheduler.schedule_absolute()`
+    *   `AsyncIOScheduler.now`
+*   `AsyncIOThreadSafeScheduler`
+    *   `AsyncIOThreadSafeScheduler.schedule()`
+    *   `AsyncIOThreadSafeScheduler.schedule_relative()`
+    *   `AsyncIOThreadSafeScheduler.schedule_absolute()`
+*   `EventletScheduler`
+    *   `EventletScheduler.__init__()`
+    *   `EventletScheduler.schedule()`
+    *   `EventletScheduler.schedule_relative()`
+    *   `EventletScheduler.schedule_absolute()`
+    *   `EventletScheduler.now`
+*   `GEventScheduler`
+    *   `GEventScheduler.__init__()`
+    *   `GEventScheduler.schedule()`
+    *   `GEventScheduler.schedule_relative()`
+    *   `GEventScheduler.schedule_absolute()`
+    *   `GEventScheduler.now`
+*   `IOLoopScheduler`
+    *   `IOLoopScheduler.__init__()`
+    *   `IOLoopScheduler.schedule()`
+    *   `IOLoopScheduler.schedule_relative()`
+    *   `IOLoopScheduler.schedule_absolute()`
+    *   `IOLoopScheduler.now`
+*   `TwistedScheduler`
+    *   `TwistedScheduler.__init__()`
+    *   `TwistedScheduler.schedule()`
+    *   `TwistedScheduler.schedule_relative()`
+    *   `TwistedScheduler.schedule_absolute()`
+    *   `TwistedScheduler.now`
+*   `GtkScheduler`
+    *   `GtkScheduler.__init__()`
+    *   `GtkScheduler.schedule()`
+    *   `GtkScheduler.schedule_relative()`
+    *   `GtkScheduler.schedule_absolute()`
+    *   `GtkScheduler.schedule_periodic()`
+*   `PyGameScheduler`
+    *   `PyGameScheduler.__init__()`
+    *   `PyGameScheduler.schedule()`
+    *   `PyGameScheduler.schedule_relative()`
+    *   `PyGameScheduler.schedule_absolute()`
+*   `QtScheduler`
+    *   `QtScheduler.__init__()`
+    *   `QtScheduler.schedule()`
+    *   `QtScheduler.schedule_relative()`
+    *   `QtScheduler.schedule_absolute()`
+    *   `QtScheduler.schedule_periodic()`
+*   `TkinterScheduler`
+    *   `TkinterScheduler.__init__()`
+    *   `TkinterScheduler.schedule()`
+    *   `TkinterScheduler.schedule_relative()`
+    *   `TkinterScheduler.schedule_absolute()`
+*   `WxScheduler`
+    *   `WxScheduler.__init__()`
+    *   `WxScheduler.cancel_all()`
+    *   `WxScheduler.schedule()`
+    *   `WxScheduler.schedule_relative()`
+    *   `WxScheduler.schedule_absolute()`
+    *   `WxScheduler.schedule_periodic()`
+
+### Operators
+
+This section lists various operators that can be applied to Observable sequences to transform, filter, or combine them.
+
+*   `all()`
+*   `amb()`
+*   `as_observable()`
+*   `average()`
+*   `buffer()`
+*   `buffer_when()`
+*   `buffer_toggle()`
+*   `buffer_with_count()`
+*   `buffer_with_time()`
+*   `buffer_with_time_or_count()`
+*   `catch()`
+*   `combine_latest()`
+*   `concat()`
+*   `contains()`
+*   `count()`
+*   `debounce()`
+*   `throttle_with_timeout()`
+*   `default_if_empty()`
+*   `delay_subscription()`
+*   `delay_with_mapper()`
+*   `dematerialize()`
+*   `delay()`
+*   `distinct()`
+*   `distinct_until_changed()`
+*   `do()`
+*   `do_action()`
+*   `do_while()`
+*   `element_at()`
+*   `element_at_or_default()`
+*   `exclusive()`
+*   `expand()`
+*   `filter()`
+*   `filter_indexed()`
+*   `finally_action()`
+*   `find()`
+*   `find_index()`
+*   `first()`
+*   `first_or_default()`
+*   `flat_map()`
+*   `flat_map_indexed()`
+*   `flat_map_latest()`
+*   `fork_join()`
+*   `group_by()`
+*   `group_by_until()`
+*   `group_join()`
+*   `ignore_elements()`
+*   `is_empty()`
+*   `join()`
+*   `last()`
+*   `last_or_default()`
+*   `map()`
+*   `map_indexed()`
+*   `materialize()`
+*   `max()`
+*   `max_by()`
+*   `merge()`
+*   `merge_all()`
+*   `min()`
+*   `min_by()`
+*   `multicast()`
+*   `observe_on()`
+*   `on_error_resume_next()`
+*   `pairwise()`
+*   `partition()`
+*   `partition_indexed()`
+*   `pluck()`
+*   `pluck_attr()`
+*   `publish()`
+*   `publish_value()`
+*   `reduce()`
+*   `ref_count()`
+*   `repeat()`
+*   `replay()`
+*   `retry()`
+*   `sample()`
+*   `scan()`
+*   `sequence_equal()`
+*   `share()`
+*   `single()`
+*   `single_or_default()`
+*   `skip()`
+*   `skip_last()`
+*   `skip_last_with_time()`
+*   `skip_until()`
+*   `skip_until_with_time()`
+*   `skip_while()`
+*   `skip_while_indexed()`
+*   `skip_with_time()`
+*   `slice()`
+*   `some()`
+*   `starmap()`
+*   `starmap_indexed()`
+*   `start_with()`
+*   `subscribe_on()`
+*   `sum()`
+*   `switch_latest()`
+*   `take()`
+*   `take_last()`
+*   `take_last_buffer()`
+*   `take_last_with_time()`
+*   `take_until()`
+*   `take_until_with_time()`
+*   `take_while()`
+*   `take_while_indexed()`
+*   `take_with_time()`
+*   `throttle_first()`
+*   `throttle_with_mapper()`
+*   `timestamp()`
+*   `timeout()`
+*   `timeout_with_mapper()`
+*   `time_interval()`
+*   `to_dict()`
+*   `to_future()`
+*   `to_iterable()`
+*   `to_list()`
+*   `to_marbles()`
+*   `to_set()`
+*   `while_do()`
+*   `window()`
+*   `window_when()`
+*   `window_toggle()`
+*   `window_with_count()`
+*   `with_latest_from()`
+*   `zip()`
+*   `zip_with_list()`
+*   `zip_with_iterable()`
+
+### Typing
+
+This section is mentioned as part of the reference but does not list any specific functions or classes within the provided text.
